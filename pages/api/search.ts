@@ -9,8 +9,6 @@ import Puppeteer from "puppeteer";
 
 import * as Db from "../../lib/db/Db";
 
-Db.helloWorld();
-
 const DEFAULT_REQUEST_COUNT = 5;
 const MAX_REQUEST_COUNT = 10;
 
@@ -44,12 +42,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  let api = new MusicBrainzApi();
-  let label = await api.searchLabel(q);
+  let fetcher = new LabelFetcher();
+  let label = await api.searchLabel(q, n);
   if (label.labels.length > 0) {
     console.log(label.labels[0].name);
 
-    let picture = await api.getLabelPicture(label.labels[0].musicBrainzId, pictureExtractor);
+    let picture = await api.getLabelPicture(label.labels[0].mbid, pictureExtractor);
     console.log("Found picture link: " + picture);
 
     res.statusCode = 200;

@@ -1,5 +1,5 @@
 export interface Release {
-  musicBrainzId: string;
+  mbid: string;
   name: string;
   date: string;
 }

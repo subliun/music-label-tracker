@@ -1,4 +1,4 @@
 export interface Label {
-  musicBrainzId: string;
+  mbid: string;
   name: string;
 }
