@@ -1,0 +1,5 @@
+CREATE TABLE label (
+  id INT PRIMARY KEY, 
+  mbid TEXT NOT NULL UNIQUE, 
+  last_updated TIMESTAMP NOT NULL, 
+  name TEXT NOT NULL);

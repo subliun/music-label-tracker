@@ -1,4 +1,6 @@
 import Head from "next/head";
+import React from "react";
+import SearchComponent from "../components/SearchComponent";
 
 const siteTitle="Music Label Tracker"
 
@@ -12,7 +14,7 @@ export default function Home() {
 
       <main className="h-full flex flex-col items-center space-y-20 text-sans bg-gray-100">
         <p className="mt-36 p-4 text-7xl bg-blue-500">{siteTitle}</p>
-        <input type="text" className="w-1/2 h-12 p-4 shadow-md" ></input>
+        <SearchComponent></SearchComponent>
       </main>
     </div>
   );
