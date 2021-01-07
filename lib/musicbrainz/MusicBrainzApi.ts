@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 
-import { Label } from "./struct/Label";
-import { Release } from "./struct/Release";
+import { Label } from "../struct/Label";
+import { Release } from "../struct/Release";
 
 class ReleaseLookupResult {
   constructor(readonly numResults: number, readonly offset: number, readonly releases: Release[]) {}
@@ -10,7 +10,7 @@ class ReleaseLookupResult {
 /**
  * For making lookups to https://musicbrainz.org/
  */
-class MusicBrainzApi {
+export class MusicBrainzApi {
   readonly baseUrl = "http://musicbrainz.org/ws/2/";
 
   /**
@@ -88,5 +88,3 @@ class MusicBrainzApi {
     return result;
   }
 }
-
-export { MusicBrainzApi, LabelSearchResult };

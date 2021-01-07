@@ -27,6 +27,7 @@ export default function SearchComponent() {
           className="w-full h-12 p-4 shadow-md"
           name="q"
           aria-label="Search"
+          autoComplete={"off"}
           value={searchText}
           onChange={(e) => {
             setSearchText(e.target.value);

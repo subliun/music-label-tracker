@@ -1,1 +1,1 @@
-export const MAX_SEARCH_STRING_LENGTH = 256;
+export const MAX_SEARCH_STRING_LENGTH = 50;

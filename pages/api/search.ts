@@ -1,7 +1,8 @@
-import { MusicBrainzApi } from "../../lib/MusicBrainzApi";
+import { MusicBrainzApi } from "../../lib/musicbrainz/MusicBrainzApi";
 import { NextApiRequest, NextApiResponse } from "next";
 
 import ProfilePictureExtractor from "../../lib/ProfilePictureExtractor";
+import { LabelFetcher } from "../../lib/fetcher/LabelFetcher";
 
 import * as Constants from "../../lib/util/Constants";
 
@@ -12,13 +13,14 @@ import * as Db from "../../lib/db/Db";
 const DEFAULT_REQUEST_COUNT = 5;
 const MAX_REQUEST_COUNT = 10;
 
-let pictureExtractor: ProfilePictureExtractor | null = null;
+let profileExtractor: ProfilePictureExtractor | null;
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  //TODO: Hack to use single instance
-  if (!pictureExtractor) {
-    pictureExtractor = new ProfilePictureExtractor(await Puppeteer.launch());
+  if (!profileExtractor) {
+    profileExtractor = new ProfilePictureExtractor(await Puppeteer.launch());
   }
+
+  console.log(req.socket.address);
 
   let q = req.query.q;
   //The query string is mandatory
@@ -31,9 +33,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   //Validate the number of records requested
   let n: number = DEFAULT_REQUEST_COUNT;
   try {
-    n = parseInt(req.query.n as string);
-    if (n < 0 || n > MAX_REQUEST_COUNT) {
-      throw Error("Invalid number of records requested");
+    let temp = parseInt(req.query.n as string);
+    if (!isNaN(temp)) {
+      n = temp;
+      if (n < 0 || n > MAX_REQUEST_COUNT) {
+        throw Error("Invalid number of records requested");
+      }
     }
   } catch (err) {
     console.error(err);
@@ -42,12 +47,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  let fetcher = new LabelFetcher();
-  let label = await api.searchLabel(q, n);
-  if (label.labels.length > 0) {
-    console.log(label.labels[0].name);
+  let fetcher = new LabelFetcher(profileExtractor);
+  let labels = await fetcher.searchLabel(q, n);
+  if (labels.length > 0) {
+    console.log(labels[0].name);
 
-    let picture = await api.getLabelPicture(label.labels[0].mbid, pictureExtractor);
+    let picture = await fetcher.getLabelPicture(labels[0].mbid);
     console.log("Found picture link: " + picture);
 
     res.statusCode = 200;
