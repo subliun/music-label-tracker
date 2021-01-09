@@ -1,8 +1,23 @@
 CREATE TABLE label (
   id BIGSERIAL PRIMARY KEY, 
-  last_updated TIMESTAMP NOT NULL, 
   mbid TEXT NOT NULL UNIQUE, 
-  name TEXT NOT NULL);
+  name TEXT NOT NULL
+);
+
+CREATE TABLE release (
+  id BIGSERIAL PRIMARY KEY, 
+  mbid TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  release_date TIMESTAMP
+);
+
+-- used to associate releases with labels
+CREATE TABLE release_label (
+  id BIGSERIAL PRIMARY KEY,
+  release_mbid TEXT REFERENCES release(mbid) ON DELETE CASCADE,
+  label_mbid TEXT REFERENCES label(mbid),
+  CONSTRAINT no_duplicates UNIQUE (release_mbid, label_mbid)
+);
 
 -- used to keep track of whether a search request returned any results
 CREATE TABLE mb_search_result_count (

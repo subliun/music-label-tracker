@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import fetch from "node-fetch";
 
 import { Label } from "../struct/Label";
@@ -16,7 +17,7 @@ export class MusicBrainzApi {
   /**
    * Generic method to look up any resource from MusicBrainz.
    *
-   * @param resource The type of resource to look up .
+   * @param resource The type of resource to look up.
    * @param id The id if we are looking up a specific resource. For search this should be empty.
    * @param params Params for the request. Modified by this method.
    */
@@ -38,14 +39,46 @@ export class MusicBrainzApi {
 
     let json = await this.musicBrainzRequest("label", "", params);
 
-    let labels = (json.labels as any[]).map((label) => {
+    let labels = json.labels.map((label: any) => {
       return { mbid: label.id, name: label.name };
     });
 
     return labels;
   }
 
-    /**
+  async searchRelease(releaseName: string, limit: number): Promise<Release[]> {
+    let params = new URLSearchParams();
+    params.append("query", releaseName);
+    params.append("limit", limit.toString());
+
+    let json = await this.musicBrainzRequest("release", "", params);
+
+    let releases = json.releases.map((release: any) => {
+      let associatedLabels: Label[] = [];
+
+      if (release["label-info"]) {
+        associatedLabels = release["label-info"].map((info: any) => {
+          let label = info.label;
+          return { mbid: label.id, name: label.name };
+        });
+      }
+
+      console.log("associated: " + JSON.stringify(associatedLabels));
+
+      let releaseDate = DateTime.fromISO(release.date);
+
+      return {
+        mbid: release.id,
+        name: release.title,
+        date: releaseDate,
+        labels: associatedLabels,
+      };
+    });
+
+    return releases;
+  }
+
+  /**
    * Get the urls associated with label 'labelMbid'.
    */
   async getLabelUrls(labelMbid: string): Promise<string[]> {
@@ -81,7 +114,7 @@ export class MusicBrainzApi {
     let json = await this.musicBrainzRequest("release", "", params);
 
     let releases = (json.releases as any[]).map((release) => {
-      return { mbid: release.id, name: release.title, date: release.date };
+      return { mbid: release.id, name: release.title, date: release.date, labels: [] };
     });
 
     let result = new ReleaseLookupResult(json["release-count"], json["release-offset"], releases);

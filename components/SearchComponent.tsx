@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { Label } from "../lib/struct/Label";
 
 export default function SearchComponent() {
   let [searchText, setSearchText] = useState("");
@@ -16,7 +17,9 @@ export default function SearchComponent() {
       method: "GET",
     }).then((response) => response.json());
 
-    setImage(result.picture);
+    let labels = result.results as Label[];
+    
+    console.log(labels);
   }
 
   return (

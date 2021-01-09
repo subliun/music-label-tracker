@@ -1,26 +1,20 @@
-import { MusicBrainzApi } from "../../lib/musicbrainz/MusicBrainzApi";
 import { NextApiRequest, NextApiResponse } from "next";
 
-import ProfilePictureExtractor from "../../lib/ProfilePictureExtractor";
 import { LabelFetcher } from "../../lib/fetcher/LabelFetcher";
 
 import * as Constants from "../../lib/util/Constants";
-
-import Puppeteer from "puppeteer";
 
 import * as Db from "../../lib/db/Db";
 
 const DEFAULT_REQUEST_COUNT = 5;
 const MAX_REQUEST_COUNT = 10;
 
-let profileExtractor: ProfilePictureExtractor | null;
-
+/**
+ * The core search functionality of the application. Attempts to
+ * find matching labels from the query string.
+ */
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  if (!profileExtractor) {
-    profileExtractor = new ProfilePictureExtractor(await Puppeteer.launch());
-  }
-
-  console.log(req.socket.address);
+  console.log(req.socket.address());
 
   let q = req.query.q;
   //The query string is mandatory
@@ -47,17 +41,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  let fetcher = new LabelFetcher(profileExtractor);
-  let labels = await fetcher.searchLabel(q, n);
-  if (labels.length > 0) {
-    console.log(labels[0].name);
+  let fetcher = new LabelFetcher();
+  let labels = await fetcher.searchRelease(q, n);
 
-    let picture = await fetcher.getLabelPicture(labels[0].mbid);
-    console.log("Found picture link: " + picture);
-
-    res.statusCode = 200;
-    res.json({ picture: picture });
-  } else {
-    res.json({ picture: "" });
-  }
+  res.statusCode = 200;
+  res.json({results: labels});
 };
