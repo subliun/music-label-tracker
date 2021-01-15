@@ -24,6 +24,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
+  //We don't care about case, and this reduces the amount of storage required for the DB search cache.
+  q = q.toLowerCase();
+
   //Validate the number of records requested
   let n: number = DEFAULT_REQUEST_COUNT;
   try {
@@ -41,8 +44,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
+  //await Db.resetDb();
+
   let fetcher = new LabelFetcher();
   let labels = await fetcher.searchRelease(q, n);
+
+  if (labels.length > 0) {
+    await fetcher.getReleasePicturePath(labels[0]);
+  }
 
   res.statusCode = 200;
   res.json({results: labels});

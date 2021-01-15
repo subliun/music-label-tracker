@@ -21,13 +21,13 @@ let searchText = "sub pop";
 
 let mbids = [
   "38dc88de-7720-4100-9d5b-3cdc41b0c474",
-  "819d1971-7ed7-4dff-9dbb-1dbcc5d1a2ac",
-  "bebd05e6-5ea6-4789-8129-21ae3ab56822",
-  "991715f3-99cb-46b6-b053-8bc5db9a69ef",
-  "7ce1464e-4f4e-44fe-9f49-0b192ceb0069",
 ].sort();
 
 let emptyResultSearchText = "hi_this_is_empty";
+
+// beforeAll(async () => {
+//   await Db.resetDb();
+// });
 
 describe("Labels", () => {
   test("can be added", async () => {
@@ -60,8 +60,9 @@ test("Adding empty label search results works", async () => {
 })
 
 test("Retrieving label search results works", async () => {
-  let result = await Db.readSearchResults(searchText, 5, MbEntityType.LABEL);
+  let result = await Db.readSearchResults(searchText, mbids.length, MbEntityType.LABEL);
   expect(result).toBeTruthy();
+  expect(result?.entities).toHaveLength(mbids.length);
   expect(result?.entities?.sort()?.map((e) => e.mbid)).toEqual(mbids);
 });
 
@@ -70,7 +71,7 @@ test("Retrieving previously-unsearched query returns null", async () => {
   expect(result).toBeNull();
 });
 
-test("Retrieving empty results gives correct update time", async () => {
+test("Retrieving empty results works", async () => {
   let result = await Db.readSearchResults(emptyResultSearchText, 5, MbEntityType.LABEL);
   expect(result).toBeTruthy();
   expect(result?.entities).toEqual([]);

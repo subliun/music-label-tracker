@@ -96,6 +96,7 @@ export async function insertRelease(release: Release) {
       mbid: release.mbid,
       name: release.name,
       release_date: date,
+      release_group_mbid: release.releaseGroupMbid,
     })
     .onConflict("mbid")
     .ignore();
@@ -138,11 +139,14 @@ export async function readRelease(mbid: string): Promise<Release | null> {
       date = DateTime.fromJSDate(row?.release_date);
     }
 
+    console.log("release group on read: " + row.release_group_mbid);
+
     return {
       mbid: row.mbid,
       name: row.name,
       date: date,
       labels: labelsPromise.filter((l) => l) as Label[],
+      releaseGroupMbid: row.release_group_mbid,
     };
   } else {
     return null;
@@ -210,7 +214,7 @@ export interface DbSearchResults<T> {
  * If the search result has not been cached, this function will return null.
  * If the search result has been cached, but returned no values, this function will return an object with
  * info on when the (empty) cached results were last updated.
- * 
+ *
  * The values of entityType and T must match.
  */
 export async function readSearchResults<T extends MbEntity>(
@@ -229,27 +233,39 @@ export async function readSearchResults<T extends MbEntity>(
 
   let results = await knex(SEARCH_RESULT_COUNT_TABLE)
     .select("*")
-    .innerJoin(SEARCH_RESULT_TABLE, `${SEARCH_RESULT_COUNT_TABLE}.id`, "result_group_id")
-    .innerJoin(resultTable, `${resultTable}.mbid`, `${SEARCH_RESULT_TABLE}.mbid`)
+    .leftOuterJoin(SEARCH_RESULT_TABLE, `${SEARCH_RESULT_COUNT_TABLE}.id`, "result_group_id")
+    .leftOuterJoin(resultTable, `${resultTable}.mbid`, `${SEARCH_RESULT_TABLE}.mbid`)
     .where(`${SEARCH_RESULT_COUNT_TABLE}.search_text`, searchText)
-    .where("mb_entity_type", entityType)
+    .where("mb_entity_type", entityType);
 
+  console.log(JSON.stringify(results));
   // We have no result info for this search text
   if (results.length == 0) {
     return null;
   }
 
   let lastUpdated = results[0].last_updated;
+  let resultCount = results[0].result_count;
 
   // this is not typesafe
-  let entities: T[] = [];
-  if (entityType == MbEntityType.LABEL) {
-    for (let row of results) {
-      entities.push({ mbid: row.mbid, name: row.name} as any);
-    }
-  } else if (entityType == MbEntityType.RELEASE) {
-    for (let row of results) {
-      entities.push({ mbid: row.mbid, name: row.name, release_date: row.release_date} as any);
+  let entities: any[] = [];
+
+  if (resultCount > 0) {
+    if (entityType == MbEntityType.LABEL) {
+      for (let row of results) {
+        entities.push(readLabel(row.mbid));
+        //entities.push({ mbid: row.mbid, name: row.name } as Label);
+      }
+    } else if (entityType == MbEntityType.RELEASE) {
+      for (let row of results) {
+        //entities.push(readRelease(row.mbid));
+        entities.push({
+          mbid: row.mbid,
+          name: row.name,
+          date: row.release_date,
+          releaseGroupMbid: row.release_group_mbid,
+        } as Release);
+      }
     }
   }
 

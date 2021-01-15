@@ -15,18 +15,19 @@ import { MbEntity } from "../struct/MbEntity";
  * Defers to MusicBrainzApi if the info is not already in the cache.
  */
 export class LabelFetcher {
-  private musicBrainzApi: MusicBrainzApi;
+  private mbApi: MusicBrainzApi;
 
-  private readonly photoCachePath = "cache/label_photo_cache/";
+  private readonly labelPhotoCachePath = "cache/label_photo_cache/";
+  private readonly releaseGroupPhotoCachePath = "cache/release_group_photo_cache/";
 
   private readonly cacheDuration = 1000 * 60 * 60 * 24 * 7; // in milliseconds
 
   constructor() {
-    this.musicBrainzApi = new MusicBrainzApi();
+    this.mbApi = new MusicBrainzApi();
   }
 
   // Util method to check if the db's cached search results have expired
-  private checkIfStale(cacheResults: Db.DbSearchResults) {
+  private checkIfStale<T extends MbEntity>(cacheResults: Db.DbSearchResults<T>) {
     let stale = false;
     if (cacheResults) {
       let timeSinceLastCache = Date.now() - cacheResults.lastUpdated.getTime();
@@ -36,8 +37,20 @@ export class LabelFetcher {
     return stale;
   }
 
+  /**
+   * Checks to see if the cached search results should be refreshed from the network.
+   */
+  private isCacheInvalid<T extends MbEntity>(
+    cacheResults: Db.DbSearchResults<T> | null,
+    limit: number
+  ): cacheResults is null {
+    //Update the cache if the database has never seen this query before,
+    //if the query is stale, or if the query does not have enough results
+    return !cacheResults || this.checkIfStale(cacheResults) || cacheResults.entities.length < limit;
+  }
+
   private async pullLabelsMusicBrainz(searchText: string, limit: number) {
-    let entities = await this.musicBrainzApi.searchLabel(searchText, limit);
+    let entities = await this.mbApi.searchLabel(searchText, limit);
 
     //Store the label info
     for (let label of entities) {
@@ -55,15 +68,13 @@ export class LabelFetcher {
 
   /**
    * Search for a given record label.
-   * 
+   *
    * Hits the cache first, then tries the MusicBrainz api.
    */
   async searchLabel(searchText: string, limit: number): Promise<Label[]> {
     let cacheResults = await Db.readSearchResults<Label>(searchText, limit, MbEntityType.LABEL);
 
-    //Update the cache if the database has never seen this query before
-    //or if the query is stale
-    if (!cacheResults || this.checkIfStale(cacheResults)) {
+    if (this.isCacheInvalid(cacheResults, limit)) {
       return this.pullLabelsMusicBrainz(searchText, limit);
     } else {
       return cacheResults.entities;
@@ -71,9 +82,9 @@ export class LabelFetcher {
   }
 
   private async pullReleasesMusicBrainz(searchText: string, limit: number) {
-    let entities = await this.musicBrainzApi.searchRelease(searchText, limit);
+    let entities = await this.mbApi.searchRelease(searchText, limit);
 
-    console.log(entities);
+    console.log("Entities: " + entities);
 
     //Store the release info
     for (let release of entities) {
@@ -99,7 +110,7 @@ export class LabelFetcher {
 
     //Update the cache if the database has never seen this query before
     //or if the query is stale
-    if (!cacheResults || this.checkIfStale(cacheResults)) {
+    if (this.isCacheInvalid(cacheResults, limit)) {
       return this.pullReleasesMusicBrainz(searchText, limit);
     } else {
       return cacheResults.entities;
@@ -112,18 +123,18 @@ export class LabelFetcher {
    * Will try to use the cached image first, then download an image from the associated mbid's url links.
    */
   async getLabelPicturePath(
-    labelMbid: string,
+    mbid: string,
     profileExtractor: ProfilePictureExtractor
   ): Promise<string | null> {
-    let filePath = this.photoCachePath + labelMbid + ".jpg";
+    let filePath = this.labelPhotoCachePath + mbid + ".jpg";
     let exists = await FileUtil.exists(filePath);
 
     if (exists) {
       return filePath;
     }
 
-    let twitterUrls = await this.musicBrainzApi.getCertainUrls(labelMbid, "twitter.com");
-    let discogsUrls = await this.musicBrainzApi.getCertainUrls(labelMbid, "discogs.com");
+    let twitterUrls = await this.mbApi.getCertainUrls(mbid, "twitter.com");
+    let discogsUrls = await this.mbApi.getCertainUrls(mbid, "discogs.com");
 
     console.log(twitterUrls);
 
@@ -132,7 +143,7 @@ export class LabelFetcher {
 
       if (pictureUrl) {
         //Cache picture
-        await FileUtil.createFolder(process.cwd() + "/" + this.photoCachePath);
+        await FileUtil.createFolder(process.cwd() + "/" + this.labelPhotoCachePath);
         await FileUtil.download(pictureUrl, filePath);
 
         return filePath;
@@ -142,13 +153,34 @@ export class LabelFetcher {
     return null;
   }
 
-  async getLabelInfo(mbid: string) {
-    // let label = await this.musicBrainzApi.searchLabel(q, n);
-    // if (label.labels.length > 0) {
-    //   console.log(label.labels[0].name);
-    //   let picture = await this.musicBrainzApi.getLabelPicture(label.labels[0].mbid, pictureExtractor);
-    //   console.log("Found picture link: " + picture);
-    // }
-    // Db.readLabel(mbid);
+  /**
+   * Try to get the path of a photo for the release.
+   * 
+   * Uses the release's group mbid.
+   * 
+   * Will try to use the cached image first, then download an image from the mbid's entry on 
+   * coverartarchive.org.
+   */
+  async getReleasePicturePath(release: Release): Promise<string | null> {
+    let filePath = this.releaseGroupPhotoCachePath + release.releaseGroupMbid + ".jpg";
+    let exists = await FileUtil.exists(filePath);
+
+    if (exists) {
+      return filePath;
+    }
+
+    let pictureUrl = await this.mbApi.getReleaseGroupPictureUrl(release.releaseGroupMbid);
+
+    console.log("pciture url: " + pictureUrl);
+    
+    if (pictureUrl) {
+      //Cache picture
+      await FileUtil.createFolder(process.cwd() + "/" + this.releaseGroupPhotoCachePath);
+      await FileUtil.download(pictureUrl, filePath);
+
+      return filePath;
+    }
+
+    return null;
   }
 }

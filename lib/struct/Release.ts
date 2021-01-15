@@ -6,4 +6,5 @@ export interface Release extends MbEntity {
   name: string;
   date?: DateTime;
   labels: Label[];
+  releaseGroupMbid: string;
 }

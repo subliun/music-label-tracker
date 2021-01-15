@@ -27,9 +27,7 @@ export class MusicBrainzApi {
 
     let queryString = this.baseUrl + resource + "/" + id + "?" + params.toString();
 
-    return fetch(queryString, {
-      method: "GET",
-    }).then((response) => response.json());
+    return fetch(queryString).then((response) => response.json());
   }
 
   async searchLabel(labelName: string, limit: number): Promise<Label[]> {
@@ -53,6 +51,8 @@ export class MusicBrainzApi {
 
     let json = await this.musicBrainzRequest("release", "", params);
 
+    console.log(json);
+
     let releases = json.releases.map((release: any) => {
       let associatedLabels: Label[] = [];
 
@@ -65,17 +65,49 @@ export class MusicBrainzApi {
 
       console.log("associated: " + JSON.stringify(associatedLabels));
 
-      let releaseDate = DateTime.fromISO(release.date);
-
       return {
         mbid: release.id,
         name: release.title,
-        date: releaseDate,
+        date: DateTime.fromISO(release.date),
         labels: associatedLabels,
+        releaseGroupMbid: release["release-group"].id
       };
     });
 
     return releases;
+  }
+
+  async getReleaseGroupPictureUrl(releaseGroupMbid: string, size: "250" | "500" = "250"): Promise<string | null> {
+    const fetchUrl = "http://coverartarchive.org" + "/" + "release-group" + "/" + releaseGroupMbid;
+    console.log(fetchUrl);
+    let json = await fetch(fetchUrl).then(
+      (response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          return null;
+        }
+      }
+    );
+
+    //find the right size url in the thumbnails
+    //done to avoid inconsistent naming in musicbrainz
+    let thumbnails: string[] = json?.images?.[0]?.thumbnails;
+
+    console.log(thumbnails);
+
+    let url: string | null = null;
+    if (thumbnails) {
+      let matchingThumbnails = Object.values(thumbnails).filter((urlString: string) => {
+        return urlString.includes("-" + size + ".")
+      });
+
+      if (matchingThumbnails.length > 0) {
+        url = matchingThumbnails[0];
+      }
+    }
+
+    return url;
   }
 
   /**

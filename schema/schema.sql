@@ -8,7 +8,8 @@ CREATE TABLE release (
   id BIGSERIAL PRIMARY KEY, 
   mbid TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
-  release_date TIMESTAMP
+  release_date TIMESTAMP,
+  release_group_mbid TEXT NOT NULL
 );
 
 -- used to associate releases with labels
