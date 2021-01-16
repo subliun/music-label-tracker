@@ -1,12 +1,29 @@
-import { FormEvent, useState } from "react";
+import result from "postcss/lib/result";
+import React, { FormEvent, useEffect, useRef, useState } from "react";
+import { start } from "repl";
 import { Label } from "../lib/struct/Label";
+import { MbEntityType } from "../lib/struct/MbEntityType";
+import { Release } from "../lib/struct/Release";
+import SearchResult from "./SearchResult";
 
 export default function SearchComponent() {
-  let [searchText, setSearchText] = useState("");
-  let [image, setImage] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [results, setResults] = useState<Release[]>([]);
+  const latestResultTimeRef = useRef<number>(0);
 
   async function onSearchPressed(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    search();
+  }
+
+  async function search() {
+    if (searchText.length === 0) {
+      setResults([]);
+      return;
+    }
+
+    let searchTime = Date.now();
 
     let params = new URLSearchParams();
     params.append("q", searchText);
@@ -17,10 +34,39 @@ export default function SearchComponent() {
       method: "GET",
     }).then((response) => response.json());
 
-    let labels = result.results as Label[];
-    
-    console.log(labels);
+    let releases = result.releases as Release[];
+
+    console.log("result for " + searchText + " " + releases);
+
+    //prevent old, slow requests from overwriting fresh ones
+    if (searchTime > latestResultTimeRef.current) {
+      setResults(releases);
+      latestResultTimeRef.current = searchTime;
+      console.log("written!")
+    } else {
+      console.log("thrown away");
+    }
   }
+
+  //Search but only after some delay.
+  function searchDelayed() {
+    const startSearchText = searchText;
+    const delay = 200;
+    let searchTimer = setTimeout(() => {
+      search();
+    }, delay);
+
+    return searchTimer;
+  }
+
+  useEffect(() => {
+    console.log("running effect");
+    let timer = searchDelayed();
+
+    //clear the timout when the searchText is changed.
+    //this prevents the search from running if it hasn't been run already
+    return () => { clearTimeout(timer); };
+  }, [searchText]);
 
   return (
     <div className="w-1/3">
@@ -37,7 +83,18 @@ export default function SearchComponent() {
           }}
         ></input>
       </form>
-      <img src={image} alt="A picture" title="A picture again"></img>
+      <div>
+        {results.map((result) => (
+          <SearchResult
+            key={result.mbid}
+            mbid={result.mbid}
+            name={result.name}
+            artist={result.artist}
+            entityType={MbEntityType.RELEASE}
+            releaseGroup={result.releaseGroupMbid}
+          ></SearchResult>
+        ))}
+      </div>
     </div>
   );
 }

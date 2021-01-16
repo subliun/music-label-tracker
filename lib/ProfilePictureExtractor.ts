@@ -8,7 +8,7 @@ export default class ProfilePictureExtractor {
     this.browserInstance = browserInstance;
   }
 
-  async extractTwitterPicture(twitterProfileUrl: string): Promise<string | null> {
+  async extractTwitterProfilePicture(twitterProfileUrl: string): Promise<string | null> {
     //I don't trust that the urls are uniformly formatted. Check.
     let photoExtension = "photo";
     if (twitterProfileUrl[twitterProfileUrl.length - 1] != "/") {
@@ -28,7 +28,6 @@ export default class ProfilePictureExtractor {
       //stop the page load and abort
       page.setRequestInterception(true);
       page.on("request", (interceptedRequest) => {
-        console.log(interceptedRequest.url());
         const re = /https:.+?400x400.+/;
         const photoUrl = interceptedRequest.url().match(re);
 
@@ -43,7 +42,6 @@ export default class ProfilePictureExtractor {
       //Prevent the page from remaining open forever if the profile picture is not found
       const timeoutTime = 4000;
       setTimeout(() => {
-        console.log("Resolving after timeout");
         resolve(null);
       }, timeoutTime);
     });
@@ -57,6 +55,7 @@ export default class ProfilePictureExtractor {
   }
 
   extractDiscogsPicture(discogsItemUrl: string): string {
+    //TODO
     return "";
   }
 }

@@ -1,7 +1,7 @@
 import { Pool, Client } from "pg";
 import { Label } from "../struct/Label";
 
-import { MbEntityType } from "../struct/MusicBrainzEntityType";
+import { MbEntityType } from "../struct/MbEntityType";
 import { Release } from "../struct/Release";
 
 import { DateTime } from "luxon";
@@ -87,7 +87,6 @@ export async function insertRelease(release: Release) {
   let date: string | null = null;
 
   if (release.date) {
-    console.log(typeof release?.date);
     date = release.date?.toISODate();
   }
 
@@ -95,19 +94,16 @@ export async function insertRelease(release: Release) {
     .insert({
       mbid: release.mbid,
       name: release.name,
+      artist: release.artist,
       release_date: date,
       release_group_mbid: release.releaseGroupMbid,
     })
     .onConflict("mbid")
     .ignore();
 
-  console.log("labels " + release.labels);
-
   for (let label of release.labels) {
     //Make sure all the labels associated with this release are known
     await insertLabel(label);
-
-    console.log("DB label: " + label);
 
     query(
       `
@@ -144,6 +140,7 @@ export async function readRelease(mbid: string): Promise<Release | null> {
     return {
       mbid: row.mbid,
       name: row.name,
+      artist: row.artist,
       date: date,
       labels: labelsPromise.filter((l) => l) as Label[],
       releaseGroupMbid: row.release_group_mbid,
@@ -238,7 +235,6 @@ export async function readSearchResults<T extends MbEntity>(
     .where(`${SEARCH_RESULT_COUNT_TABLE}.search_text`, searchText)
     .where("mb_entity_type", entityType);
 
-  console.log(JSON.stringify(results));
   // We have no result info for this search text
   if (results.length == 0) {
     return null;
@@ -253,15 +249,14 @@ export async function readSearchResults<T extends MbEntity>(
   if (resultCount > 0) {
     if (entityType == MbEntityType.LABEL) {
       for (let row of results) {
-        entities.push(readLabel(row.mbid));
-        //entities.push({ mbid: row.mbid, name: row.name } as Label);
+        entities.push({ mbid: row.mbid, name: row.name } as Label);
       }
     } else if (entityType == MbEntityType.RELEASE) {
       for (let row of results) {
-        //entities.push(readRelease(row.mbid));
         entities.push({
           mbid: row.mbid,
           name: row.name,
+          artist: row.artist,
           date: row.release_date,
           releaseGroupMbid: row.release_group_mbid,
         } as Release);

@@ -5,7 +5,7 @@ import { Label } from "../struct/Label";
 import Puppeteer from "puppeteer";
 
 import * as FileUtil from "../util/FileUtil";
-import { MbEntityType } from "../struct/MusicBrainzEntityType";
+import { MbEntityType } from "../struct/MbEntityType";
 import { Release } from "../struct/Release";
 import { MbEntity } from "../struct/MbEntity";
 
@@ -17,8 +17,8 @@ import { MbEntity } from "../struct/MbEntity";
 export class LabelFetcher {
   private mbApi: MusicBrainzApi;
 
-  private readonly labelPhotoCachePath = "cache/label_photo_cache/";
-  private readonly releaseGroupPhotoCachePath = "cache/release_group_photo_cache/";
+  private readonly labelImageCachePath = "cache/label_image_cache/";
+  private readonly releaseGroupImageCachePath = "cache/release_group_image_cache/";
 
   private readonly cacheDuration = 1000 * 60 * 60 * 24 * 7; // in milliseconds
 
@@ -84,8 +84,6 @@ export class LabelFetcher {
   private async pullReleasesMusicBrainz(searchText: string, limit: number) {
     let entities = await this.mbApi.searchRelease(searchText, limit);
 
-    console.log("Entities: " + entities);
-
     //Store the release info
     for (let release of entities) {
       Db.insertRelease(release);
@@ -122,11 +120,11 @@ export class LabelFetcher {
    *
    * Will try to use the cached image first, then download an image from the associated mbid's url links.
    */
-  async getLabelPicturePath(
+  async loadLabelImage(
     mbid: string,
     profileExtractor: ProfilePictureExtractor
   ): Promise<string | null> {
-    let filePath = this.labelPhotoCachePath + mbid + ".jpg";
+    let filePath = this.labelImageCachePath + mbid + ".jpg";
     let exists = await FileUtil.exists(filePath);
 
     if (exists) {
@@ -139,12 +137,12 @@ export class LabelFetcher {
     console.log(twitterUrls);
 
     if (twitterUrls.length > 0) {
-      let pictureUrl = await profileExtractor.extractTwitterPicture(twitterUrls[0]);
+      let imageUrl = await profileExtractor.extractTwitterProfilePicture(twitterUrls[0]);
 
-      if (pictureUrl) {
-        //Cache picture
-        await FileUtil.createFolder(process.cwd() + "/" + this.labelPhotoCachePath);
-        await FileUtil.download(pictureUrl, filePath);
+      if (imageUrl) {
+        //Cache image
+        await FileUtil.createFolder(process.cwd() + "/" + this.labelImageCachePath);
+        await FileUtil.download(imageUrl, filePath);
 
         return filePath;
       }
@@ -154,29 +152,35 @@ export class LabelFetcher {
   }
 
   /**
-   * Try to get the path of a photo for the release.
-   * 
-   * Uses the release's group mbid.
-   * 
-   * Will try to use the cached image first, then download an image from the mbid's entry on 
+   * Try to get the path of a photo for the release group associated with this release.
+   *
+   * Will try to use the cached image first, then download an image from the mbid's entry on
    * coverartarchive.org.
    */
-  async getReleasePicturePath(release: Release): Promise<string | null> {
-    let filePath = this.releaseGroupPhotoCachePath + release.releaseGroupMbid + ".jpg";
+  async loadReleaseGroupImage(release: Release): Promise<string | null> {
+    let filePath = this.releaseGroupImageCachePath + release.releaseGroupMbid + ".jpg";
     let exists = await FileUtil.exists(filePath);
 
     if (exists) {
       return filePath;
     }
 
-    let pictureUrl = await this.mbApi.getReleaseGroupPictureUrl(release.releaseGroupMbid);
+    console.log("Hitting the network for: " + release.releaseGroupMbid);
 
-    console.log("pciture url: " + pictureUrl);
-    
-    if (pictureUrl) {
-      //Cache picture
-      await FileUtil.createFolder(process.cwd() + "/" + this.releaseGroupPhotoCachePath);
-      await FileUtil.download(pictureUrl, filePath);
+    let imageUrl = this.mbApi.getReleaseGroupImageUrl(release.releaseGroupMbid);
+
+    if (imageUrl) {
+      //Cache image
+      await FileUtil.createFolder(process.cwd() + "/" + this.releaseGroupImageCachePath);
+
+      try {
+        await FileUtil.download(imageUrl, filePath);
+      } catch (err) {
+        console.log("failed to find image for " + release.name);
+        return null;
+      }
+
+      console.log("finished downloading!");
 
       return filePath;
     }

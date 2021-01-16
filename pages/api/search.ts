@@ -5,6 +5,7 @@ import { LabelFetcher } from "../../lib/fetcher/LabelFetcher";
 import * as Constants from "../../lib/util/Constants";
 
 import * as Db from "../../lib/db/Db";
+import { Release } from "../../lib/struct/Release";
 
 const DEFAULT_REQUEST_COUNT = 5;
 const MAX_REQUEST_COUNT = 10;
@@ -44,15 +45,21 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  //await Db.resetDb();
-
   let fetcher = new LabelFetcher();
-  let labels = await fetcher.searchRelease(q, n);
+  let releases = await fetcher.searchRelease(q, n);
 
-  if (labels.length > 0) {
-    await fetcher.getReleasePicturePath(labels[0]);
+  let uniqueGroupMbids = Array.from(new Set(releases.map(release => release.releaseGroupMbid)));
+  let uniqueReleases: Release[] = [];
+
+  for (let uniqueId of uniqueGroupMbids) {
+    let index = releases.map(release => release.releaseGroupMbid).indexOf(uniqueId);
+    uniqueReleases.push(releases[index]);
+  }
+  
+  if (releases.length > 0) {
+    fetcher.loadReleaseGroupImage(releases[0]);
   }
 
   res.statusCode = 200;
-  res.json({results: labels});
+  res.json({releases: uniqueReleases});
 };

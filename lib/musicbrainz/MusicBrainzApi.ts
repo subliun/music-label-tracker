@@ -27,6 +27,8 @@ export class MusicBrainzApi {
 
     let queryString = this.baseUrl + resource + "/" + id + "?" + params.toString();
 
+    console.log("MusicBrainz query: " + queryString);
+
     return fetch(queryString).then((response) => response.json());
   }
 
@@ -51,63 +53,43 @@ export class MusicBrainzApi {
 
     let json = await this.musicBrainzRequest("release", "", params);
 
-    console.log(json);
-
     let releases = json.releases.map((release: any) => {
       let associatedLabels: Label[] = [];
 
       if (release["label-info"]) {
-        associatedLabels = release["label-info"].map((info: any) => {
-          let label = info.label;
-          return { mbid: label.id, name: label.name };
-        });
+        associatedLabels = release["label-info"]
+          .map((info: any) => info?.label)
+          .filter((label: any) => label?.id && label?.name)
+          .map((label: any) => {
+            return { mbid: label.id, name: label.name };
+          });
       }
 
-      console.log("associated: " + JSON.stringify(associatedLabels));
+      let artist = release?.["artist-credit"]?.[0]?.artist?.name;
+      if (!artist) {
+        artist = "";
+      }
 
       return {
         mbid: release.id,
         name: release.title,
+        artist: artist,
         date: DateTime.fromISO(release.date),
         labels: associatedLabels,
-        releaseGroupMbid: release["release-group"].id
+        releaseGroupMbid: release["release-group"].id,
       };
     });
 
     return releases;
   }
 
-  async getReleaseGroupPictureUrl(releaseGroupMbid: string, size: "250" | "500" = "250"): Promise<string | null> {
-    const fetchUrl = "http://coverartarchive.org" + "/" + "release-group" + "/" + releaseGroupMbid;
+  getReleaseGroupImageUrl(
+    releaseGroupMbid: string,
+    size: "250" | "500" = "250"
+  ): string {
+    const fetchUrl = "http://coverartarchive.org" + "/" + "release-group" + "/" + releaseGroupMbid + "/front-" + size;
     console.log(fetchUrl);
-    let json = await fetch(fetchUrl).then(
-      (response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          return null;
-        }
-      }
-    );
-
-    //find the right size url in the thumbnails
-    //done to avoid inconsistent naming in musicbrainz
-    let thumbnails: string[] = json?.images?.[0]?.thumbnails;
-
-    console.log(thumbnails);
-
-    let url: string | null = null;
-    if (thumbnails) {
-      let matchingThumbnails = Object.values(thumbnails).filter((urlString: string) => {
-        return urlString.includes("-" + size + ".")
-      });
-
-      if (matchingThumbnails.length > 0) {
-        url = matchingThumbnails[0];
-      }
-    }
-
-    return url;
+    return fetchUrl;
   }
 
   /**
@@ -121,7 +103,6 @@ export class MusicBrainzApi {
 
     return json.relations
       .map((relation: any) => {
-        console.log(relation);
         return relation?.url?.resource;
       })
       .filter((urlString: string) => urlString); // check that the url is defined

@@ -1,4 +1,4 @@
-import { MbEntityType } from "../struct/MusicBrainzEntityType";
+import { MbEntityType } from "../struct/MbEntityType";
 import { Label } from "../struct/Label";
 import { Release } from "../struct/Release";
 import * as Db from "./Db";
@@ -14,7 +14,8 @@ let testRelease: Release = {
   mbid: "38c7af19-3f10-46f7-8a85-3c9801893593", 
   name: "Titanic Rising", 
   date: DateTime.fromISO("2019-04-05"), 
-  labels: [testLabel]
+  labels: [testLabel],
+  releaseGroupMbid: "b30447b9-8e32-4e98-a128-9c18d9378e8d"
 };
 
 let searchText = "sub pop";

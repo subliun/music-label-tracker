@@ -8,6 +8,7 @@ CREATE TABLE release (
   id BIGSERIAL PRIMARY KEY, 
   mbid TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
+  artist TEXT NOT NULL,
   release_date TIMESTAMP,
   release_group_mbid TEXT NOT NULL
 );
