@@ -20,6 +20,18 @@ export async function createFolder(path: string): Promise<void> {
   });
 }
 
+export async function readFile(path: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data.toString());
+      }
+    })
+  })
+}
+
 export async function download(url: string, savePath: string) {
   let res = await fetch(url, {
     method: "GET",

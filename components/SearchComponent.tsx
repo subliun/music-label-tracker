@@ -8,7 +8,7 @@ import SearchResult from "./SearchResult";
 
 export default function SearchComponent() {
   const [searchText, setSearchText] = useState("");
-  const [results, setResults] = useState<Release[]>([]);
+  const [results, setResults] = useState<any[]>([]);
   const latestResultTimeRef = useRef<number>(0);
 
   async function onSearchPressed(event: FormEvent<HTMLFormElement>) {
@@ -28,13 +28,11 @@ export default function SearchComponent() {
     let params = new URLSearchParams();
     params.append("q", searchText);
 
-    console.log("/api/search" + "?" + params.toString());
-
-    let result = await fetch("/api/search" + "?" + params.toString(), {
+    let result = await fetch("/api/spotify/search" + "?" + params.toString(), {
       method: "GET",
     }).then((response) => response.json());
 
-    let releases = result.releases as Release[];
+    let releases = result.albums.items;
 
     console.log("result for " + searchText + " " + releases);
 
@@ -86,12 +84,13 @@ export default function SearchComponent() {
       <div>
         {results.map((result) => (
           <SearchResult
-            key={result.mbid}
-            mbid={result.mbid}
+            key={result.id}
+            mbid={result.id}
             name={result.name}
-            artist={result.artist}
+            artist={result.type}
             entityType={MbEntityType.RELEASE}
-            releaseGroup={result.releaseGroupMbid}
+            releaseGroup={result.id}
+            coverUrl={result.images[1].url}
           ></SearchResult>
         ))}
       </div>
