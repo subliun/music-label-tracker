@@ -7,5 +7,4 @@ export interface Release extends MbEntity {
   artist: string;
   date?: DateTime;
   labels: Label[];
-  releaseGroupMbid: string;
 }

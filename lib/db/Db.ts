@@ -9,14 +9,11 @@ import { DateTime } from "luxon";
 import knexConstructor from "knex";
 
 import fs from "fs";
-import dotenv from "dotenv";
+import * as DotEnvUtil from "../util/DotEnvUtil";
 import { MbEntity } from "../struct/MbEntity";
 
-//Hack to ensure that environment variables are loaded correctly
-if (process.env.NODE_ENV === "test") {
-  const path = process.cwd() + "/" + ".env.test.local";
-  let result = dotenv.config({ path: path });
-}
+//read in env vars for db setup
+DotEnvUtil.initEnvVars();
 
 let knex = knexConstructor({
   client: "pg",
