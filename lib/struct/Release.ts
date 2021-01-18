@@ -4,7 +4,8 @@ import { MbEntity } from "./MbEntity";
 
 export interface Release extends MbEntity {
   name: string;
-  artist: string;
-  date?: DateTime;
-  labels: Label[];
+  artistName: string;
+  dateYear?: string;
+  label: Label;
+  photoUrl?: string;
 }

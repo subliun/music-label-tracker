@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import ProfilePictureExtractor from "../../../../lib/ProfilePictureExtractor";
 
 import Puppeteer from "puppeteer";
-import { LabelFetcher } from "../../../../lib/fetcher/LabelFetcher";
+import { SearchEngine } from "../../../../lib/fetcher/SearchEngine";
 
 import * as FileUtil from "../../../../lib/util/FileUtil";
 import * as Db from "../../../../lib/db/Db";
@@ -10,7 +10,7 @@ import { MbEntityType } from "../../../../lib/struct/MbEntityType";
 import { MbEntity } from "../../../../lib/struct/MbEntity";
 
 let profileExtractor: ProfilePictureExtractor | null;
-let fetcher = new LabelFetcher();
+let fetcher = new SearchEngine();
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   if (!profileExtractor) {

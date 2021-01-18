@@ -1,32 +1,28 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import { LabelFetcher } from "../../lib/fetcher/LabelFetcher";
-
-import * as Constants from "../../lib/util/Constants";
-
-import * as Db from "../../lib/db/Db";
+import { SearchEngine } from "../../lib/fetcher/SearchEngine";
 import { Release } from "../../lib/struct/Release";
 
-const DEFAULT_REQUEST_COUNT = 5;
+const DEFAULT_REQUEST_COUNT = 3;
 const MAX_REQUEST_COUNT = 10;
+
+let searchEngine = new SearchEngine();
 
 /**
  * The core search functionality of the application. Attempts to
  * find matching labels from the query string.
  */
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  console.log(req.socket.address());
-
+  if (!searchEngine.isInitialized) {
+    await searchEngine.initialize();
+  }
+  
   let q = req.query.q;
   //The query string is mandatory
-  if (!q || !(typeof q === 'string') || q.length > Constants.MAX_SEARCH_STRING_LENGTH) {
+  if (!q || !(typeof q === 'string')) {
     res.statusCode = 400;
     res.end();
     return;
   }
-
-  //We don't care about case, and this reduces the amount of storage required for the DB search cache.
-  q = q.toLowerCase();
 
   //Validate the number of records requested
   let n: number = DEFAULT_REQUEST_COUNT;
@@ -45,21 +41,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  let fetcher = new LabelFetcher();
-  let releases = await fetcher.searchRelease(q, n);
+  console.time("release lookup");
+  let releases = await searchEngine.searchRelease(q, 3);
+  console.timeEnd("release lookup");
 
-  let uniqueGroupMbids = Array.from(new Set(releases.map(release => release.releaseGroupMbid)));
-  let uniqueReleases: Release[] = [];
+  console.time("label lookup");
+  let labels = await searchEngine.searchLabel(q, 3);
+  console.timeEnd("label lookup");
 
-  for (let uniqueId of uniqueGroupMbids) {
-    let index = releases.map(release => release.releaseGroupMbid).indexOf(uniqueId);
-    uniqueReleases.push(releases[index]);
-  }
-  
-  if (releases.length > 0) {
-    fetcher.loadReleaseGroupImage(releases[0]);
-  }
-
-  res.statusCode = 200;
-  res.json({releases: uniqueReleases});
+  res.status(200).send({releases: releases, labels: labels});
 };

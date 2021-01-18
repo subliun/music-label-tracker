@@ -1,1 +1,0 @@
-export const MAX_SEARCH_STRING_LENGTH = 50;

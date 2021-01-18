@@ -1,19 +1,15 @@
 import { useState } from "react";
 import { MbEntityType } from "../lib/struct/MbEntityType";
+import { Release } from "../lib/struct/Release";
 
 interface SearchResultProps {
-  mbid: string;
-  name: string;
-  artist: string;
-  entityType: MbEntityType;
-  releaseGroup: string;
-  coverUrl: string;
+  release: Release;
 }
 
 export default function SearchResult(props: SearchResultProps) {
   let [isImageLoaded, setImageLoaded] = useState(false);
 
-  let imageUrl = props.coverUrl; //`http://coverartarchive.org/release-group/${props.releaseGroup}/front-250`;
+  let imageUrl = props.release.photoUrl;
 
   return (
     <div className="flex flex-row items-center px-6 py-4 bg-white hover:bg-indigo-300">
@@ -30,11 +26,14 @@ export default function SearchResult(props: SearchResultProps) {
       </div>
 
       <div className="ml-4 flex flex-col">
-        <p className="text-lg">{props.name}</p>
-        <p className="mt-1 text-sm">{props.artist}</p>
+        <p className="text-lg">{props.release.name}</p>
+        <p className="mt-1 text-sm">{props.release.artistName}</p>
       </div>
 
-      <p className="ml-4">{props.releaseGroup}</p>
+      <div className="ml-4 flex flex-col">
+        <p>{props.release.mbid}</p>
+        <p className="mt-1">{props.release.label.name + ` (${props.release.label.releaseCount})`}</p>
+      </div>
     </div>
   );
 }
