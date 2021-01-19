@@ -5,6 +5,8 @@ import { Release } from "../struct/Release";
 
 import * as DotEnvUtil from "../util/DotEnvUtil";
 
+const maxConnections = 50;
+
 export class MusicBrainzDb {
   knex: Knex;
 
@@ -21,6 +23,8 @@ export class MusicBrainzDb {
     this.knex = knexConstructor({
       client: "pg",
       connection: options,
+      debug: true,
+      pool: { min: 0, max: maxConnections }
     });
   }
 
@@ -52,11 +56,23 @@ export class MusicBrainzDb {
     );
   }
 
+  async createIndexes() {
+    await this.knex.raw(
+      "CREATE INDEX IF NOT EXISTS release_idx_name_search ON release USING GIN(to_tsvector('english', name))"
+    );
+
+    await this.knex.raw(
+      "CREATE INDEX IF NOT EXISTS artist_credit_idx_name_search ON artist_credit USING GIN(to_tsvector('english', name))"
+    );
+  }
+
   /**
    * Checks and maintains any extra tables that are generated to speed up queries. Should be run
    * periodically to ensure the db remains up to date.
    */
   async runTableMaintenance() {
+    this.createIndexes();
+
     let hasTable = await this.knex.schema.hasTable("label_release_count");
     let shouldRefreshTable = true;
     if (hasTable) {
@@ -79,10 +95,32 @@ export class MusicBrainzDb {
     return promise;
   }
 
-  async lookupRelease(name: string, artist: string): Promise<Release[]> {
-    // Might be used to allow to choose between multiple releases of the 
+  async lookupRelease(
+    name: string,
+    artist: string,
+    year: number,
+    fuzzy: boolean = false
+  ): Promise<Release[]> {
+    // Might be used to allow to choose between multiple releases of the
     // same album on the same label in future
     let limit = 5;
+
+    const coalescedDate = "coalesce(release_country.date_year, release_unknown_country.date_year)";
+
+    let artistWhere = this.knex.raw("artist_credit.name = ?", artist);
+    if (fuzzy) {
+      artistWhere = this.knex.raw("to_tsvector('english', artist_credit.name) @@ plainto_tsquery(?)", artist);
+    }
+
+    let nameWhere = this.knex.raw("release.name = ?", name);
+    if (fuzzy) {
+      nameWhere = this.knex.raw("to_tsvector('english', release.name) @@ plainto_tsquery(?)", name);
+    }
+
+    let dateWhere = this.knex.raw(`${coalescedDate} = ?`, year);
+    if (fuzzy) {
+      dateWhere = this.knex.raw("TRUE");
+    }
 
     let rows = await this.knex("release")
       .select(
@@ -93,7 +131,8 @@ export class MusicBrainzDb {
         "label.gid as label_mbid",
         "label_release_count.count_approx as label_release_count",
         "release_country.date_year as rc_year",
-        "release_unknown_country.date_year as uc_year"
+        "release_unknown_country.date_year as uc_year",
+        this.knex.raw(coalescedDate + " as release_year")
       )
       .leftOuterJoin("release_country", "release_country.release", "release.id")
       .leftOuterJoin("release_unknown_country", "release_unknown_country.release", "release.id")
@@ -101,24 +140,19 @@ export class MusicBrainzDb {
       .innerJoin("label", "label.id", "release_label.label")
       .innerJoin("label_release_count", "label_release_count.label_id", "label.id")
       .innerJoin("artist_credit", "artist_credit.id", "release.artist_credit")
-      .where({ "release.name": name, "artist_credit.name": artist })
-      .orderBy(["rc_year", "uc_year"])
+      .where(artistWhere)
+      .andWhere(nameWhere)
+      .andWhere(dateWhere)
+      .orderByRaw("release_year")
       .limit(limit);
 
     let releases: Release[] = [];
     for (let row of rows) {
-      let dateYear = null;
-      if (row.rc_year) {
-        dateYear = row.rc_year;
-      } else if (row.uc_year) {
-        dateYear = row.uc_year;
-      }
-
       let release: Release = {
         mbid: row.release_mbid,
         name: row.release_name,
         artistName: row.artist_name,
-        dateYear: dateYear,
+        dateYear: row.release_year,
         label: {
           mbid: row.label_mbid,
           name: row.label_name,
@@ -146,7 +180,7 @@ export class MusicBrainzDb {
       return {
         mbid: row.mbid,
         name: row.name,
-        release_count: row.release_count,
+        releaseCount: row.release_count,
       };
     });
 

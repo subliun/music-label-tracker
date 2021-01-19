@@ -41,13 +41,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  console.time("release lookup");
+  console.time("total release lookup");
   let releases = await searchEngine.searchRelease(q, 3);
-  console.timeEnd("release lookup");
+  console.timeEnd("total release lookup");
 
-  console.time("label lookup");
+  console.time("total label lookup");
   let labels = await searchEngine.searchLabel(q, 3);
-  console.timeEnd("label lookup");
-
+  console.timeEnd("total label lookup");
+  
   res.status(200).send({releases: releases, labels: labels});
 };

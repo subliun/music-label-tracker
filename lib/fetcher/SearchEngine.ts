@@ -27,8 +27,6 @@ export class SearchEngine {
   private readonly labelImageCachePath = "cache/label_image_cache/";
   private readonly releaseGroupImageCachePath = "cache/release_group_image_cache/";
 
-  private readonly cacheDuration = 1000 * 60 * 60 * 24 * 7; // in milliseconds
-
   constructor() {
     this.mbApi = new MusicBrainzApi();
     this.mbDb = new MusicBrainzDb();
@@ -70,11 +68,20 @@ export class SearchEngine {
   }
 
   private cleanAlbumName(name: string) {
-    //remove brackets
-    let bracketIndex = name.indexOf("(");
-    if (bracketIndex !== -1) {
-      name = name.slice(0, bracketIndex);
+    function removeAfter(s: string, token: string) {
+      let index = s.indexOf(token);
+      if (index !== -1) {
+        s = s.slice(0, index);
+      }
+
+      return s;
     }
+
+    //remove brackets
+    name = removeAfter(name, "(");
+
+    //remove dash
+    name = removeAfter(name, "-");
 
     name = name.trim();
 
@@ -92,49 +99,39 @@ export class SearchEngine {
   }
 
   /**
-   * Try to lookup a release in the database.
-   * 
-   * If it can't find the album using the exact album name, this method will clean 
-   * the name and search again.
+   * Try to lookup a release in the MusicBrainz database.
    */
-  private async lookupRelease(albumName: string, artistName: string): Promise<Release[]> {
-    let albumNameCleaned = this.cleanAlbumName(albumName);
-
+  private async lookupRelease(
+    albumName: string,
+    artistName: string,
+    year: number,
+    fuzzy: boolean = false
+  ): Promise<Release[]> {
     //so that we can do the two lookups simultaneously
-    let simpleLookupPromise = this.mbDb.lookupRelease(albumName, artistName);
-
-    let resultCleaned: Release[] = [];
-    if (albumNameCleaned !== albumName) {
-      resultCleaned = await this.mbDb.lookupRelease(albumNameCleaned, artistName);
-    }
-
-    let resultSimple = await simpleLookupPromise;
-
-    let result = resultSimple;
-    if (resultSimple.length === 0) {
-      result = resultCleaned;
-    }
+    let result = this.mbDb.lookupRelease(albumName, artistName, year, fuzzy);
 
     return result;
   }
 
-  /**
-   * Search for a given release.
-   */
-  async searchRelease(q: string, limit: number): Promise<Release[]> {
-    console.time("search spotify");
-    let json = await this.spotifyApi.searchAlbum(q, limit);
-    console.timeEnd("search spotify");
+  private async searchReleaseDb(spotifyItems: any[], fuzzy: boolean = false) {
+    //process all of the releases together
+    // let promises = spotifyItems.flatMap(async (albumInfo) => {
+      
+    // });
 
-    console.log(json.albums.items);
+    let releases: Release[] = []; //= (await Promise.all(promises)).filter((r) => r) as Release[];
 
-    let releases: Release[] = [];
-    for (let albumInfo of json.albums.items) {
-      let albumName = albumInfo.name;
-
+    for (let albumInfo of spotifyItems) {
+      let albumName = this.cleanAlbumName(albumInfo.name);
       let artistName = albumInfo.artists?.[0].name;
 
-      let result = await this.lookupRelease(albumName, artistName);
+      let year: string = albumInfo.release_date;
+      let dashIndex = year.indexOf("-");
+      if (dashIndex !== -1) {
+        year = year.slice(0, dashIndex);
+      }
+
+      let result = await this.lookupRelease(albumName, artistName, parseInt(year), fuzzy);
 
       //only use the first album returned by the db for now
       if (result.length > 0) {
@@ -147,6 +144,32 @@ export class SearchEngine {
         }
       }
     }
+    
+    return releases;
+  }
+
+  /**
+   * Search for a given release.
+   */
+  async searchRelease(q: string, limit: number): Promise<Release[]> {
+    console.time("search spotify");
+    let json = await this.spotifyApi.searchAlbum(q, limit);
+    console.timeEnd("search spotify");
+
+    console.log(json.albums.items);
+
+    console.time("search db");
+    let releases = await this.searchReleaseDb(json.albums.items);
+
+    //try again with more expensive search
+    if (releases.length === 0) {
+      releases = await this.searchReleaseDb(json.albums.items, true);
+      console.log("resorting to expensive search");
+    } else {
+      console.log("normal search is fine");
+    }
+
+    console.timeEnd("search db");
 
     return releases;
   }

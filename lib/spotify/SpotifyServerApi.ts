@@ -44,7 +44,7 @@ export class SpotifyServerApi {
     if (response.ok) {
       json = await response.json();
     } else {
-      throw Error("Failed to authorise Spotify API: " + response);
+      throw Error("Failed to authorise Spotify API: " + response.text());
     }
 
     //give ourselves plenty of time (reauth halfway through validity of token)
