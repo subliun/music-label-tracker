@@ -6,7 +6,7 @@ interface SearchResultProps {
   release: Release;
 }
 
-export default function SearchResult(props: SearchResultProps) {
+export function SearchResultRelease(props: SearchResultProps) {
   let [isImageLoaded, setImageLoaded] = useState(false);
 
   let imageUrl = props.release.photoUrl;

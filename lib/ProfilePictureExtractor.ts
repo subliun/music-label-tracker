@@ -8,7 +8,7 @@ export default class ProfilePictureExtractor {
     this.browserInstance = browserInstance;
   }
 
-  async extractTwitterProfilePicture(twitterProfileUrl: string): Promise<string | null> {
+  async extractTwitterPhotoUrl(twitterProfileUrl: string): Promise<string | null> {
     //I don't trust that the urls are uniformly formatted. Check.
     let photoExtension = "photo";
     if (twitterProfileUrl[twitterProfileUrl.length - 1] != "/") {

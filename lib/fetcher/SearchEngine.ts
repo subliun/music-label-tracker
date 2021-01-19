@@ -12,6 +12,9 @@ import { MusicBrainzDb } from "../db/MusicBrainzDb";
 import { SpotifyServerApi } from "../spotify/SpotifyServerApi";
 
 import * as DotEnvUtil from "../util/DotEnvUtil";
+import { ExecTimer } from "../util/ExecTimer";
+
+import {performance} from "perf_hooks";
 
 /**
  * Search for music labels and releases.
@@ -52,9 +55,7 @@ export class SearchEngine {
 
       await this.spotifyApi.authorise(clientId, clientSecret);
 
-      console.time("create meta");
       await this.mbDb.runTableMaintenance();
-      console.timeEnd("create meta");
     }
 
     this.isInitialized = true;
@@ -114,12 +115,7 @@ export class SearchEngine {
   }
 
   private async searchReleaseDb(spotifyItems: any[], fuzzy: boolean = false) {
-    //process all of the releases together
-    // let promises = spotifyItems.flatMap(async (albumInfo) => {
-      
-    // });
-
-    let releases: Release[] = []; //= (await Promise.all(promises)).filter((r) => r) as Release[];
+    let releases: Release[] = [];
 
     for (let albumInfo of spotifyItems) {
       let albumName = this.cleanAlbumName(albumInfo.name);
@@ -148,17 +144,21 @@ export class SearchEngine {
     return releases;
   }
 
+  totalTime = 0;
+  count = 0;
+
   /**
    * Search for a given release.
    */
   async searchRelease(q: string, limit: number): Promise<Release[]> {
-    console.time("search spotify");
+    let execTimerSearch = new ExecTimer("search spotify");
+    execTimerSearch.timeStart();
     let json = await this.spotifyApi.searchAlbum(q, limit);
-    console.timeEnd("search spotify");
+    let t0 = performance.now();
+    execTimerSearch.timeEnd();
 
-    console.log(json.albums.items);
-
-    console.time("search db");
+    let execTimerDb = new ExecTimer("search db");
+    execTimerDb.timeStart();
     let releases = await this.searchReleaseDb(json.albums.items);
 
     //try again with more expensive search
@@ -169,7 +169,11 @@ export class SearchEngine {
       console.log("normal search is fine");
     }
 
-    console.timeEnd("search db");
+    execTimerDb.timeEnd();
+    let t1 = performance.now();
+    this.count += 1;
+    this.totalTime += t1 - t0;
+    console.log("AVERAGE DB TIME IS: " + (this.totalTime / this.count));
 
     return releases;
   }
@@ -196,7 +200,7 @@ export class SearchEngine {
     console.log(twitterUrls);
 
     if (twitterUrls.length > 0) {
-      let imageUrl = await profileExtractor.extractTwitterProfilePicture(twitterUrls[0]);
+      let imageUrl = await profileExtractor.extractTwitterPhotoUrl(twitterUrls[0]);
 
       if (imageUrl) {
         //Cache image

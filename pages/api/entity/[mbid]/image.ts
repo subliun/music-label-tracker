@@ -26,46 +26,27 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  let entityType = req.query.entityType;
-  if (!entityType || !(entityType === MbEntityType.LABEL || entityType === MbEntityType.RELEASE)) {
-    console.error("invalid entity type");
-    res.statusCode = 400;
-    res.end();
-    return;
-  }
+  let entityType = MbEntityType.LABEL; //req.query.entityType;
+  // if (!entityType || !(entityType === MbEntityType.LABEL || entityType === MbEntityType.RELEASE)) {
+  //   console.error("invalid entity type");
+  //   res.statusCode = 400;
+  //   res.end();
+  //   return;
+  // }
 
-  //check that the mbid is in the database.
-  //this prevents path traversal from the mbid string
-  let entity: MbEntity | null = null; 
-  
-  if (entityType === MbEntityType.LABEL) {
-    entity = await Db.readLabel(unsafeMbid);
-  } else if (entityType === MbEntityType.RELEASE) {
-    entity = await Db.readRelease(unsafeMbid);
-  }
-
-  if (!entity) {
-    console.error("entity with mbid not found");
-    res.statusCode = 400;
-    res.end();
-    return;
-  }
-
-  // Remove all dots to ensure that we're not using a path written to the database.
-  // If MusicBrainz is hijacked to return a path as an mbid this might come up
-  // again.
+  // Remove all dots to prevent path traversal
   let re = /\./g
-  let safeMbid = entity.mbid.replace(re, "");
+  let safeMbid = unsafeMbid.replace(re, "");
 
   let imagePath: string | null = null;
 
   if (entityType === MbEntityType.LABEL) {
     imagePath = await fetcher.loadLabelImage(safeMbid, profileExtractor);
   } else if (entityType === MbEntityType.RELEASE) {
-    let release = await Db.readRelease(safeMbid);
-    if (release) {
-      imagePath = await fetcher.loadReleaseGroupImage(release);
-    }
+    // let release = await Db.readRelease(safeMbid);
+    // if (release) {
+    //   imagePath = await fetcher.loadReleaseGroupImage(release);
+    // }
   }
   
   console.log("Found image link: " + imagePath);

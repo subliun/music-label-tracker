@@ -23,8 +23,8 @@ export class MusicBrainzDb {
     this.knex = knexConstructor({
       client: "pg",
       connection: options,
-      debug: true,
-      pool: { min: 0, max: maxConnections }
+      debug: false,
+      pool: { min: 0, max: maxConnections },
     });
   }
 
@@ -54,9 +54,51 @@ export class MusicBrainzDb {
           label.id
         `
     );
+
+    await this.knex.schema.dropTableIfExists("release_date_info");
+    await this.knex.raw(
+      `
+      CREATE TABLE release_date_info (
+        id SERIAL PRIMARY KEY,
+        release_id INT UNIQUE NOT NULL REFERENCES release(id),
+        date_year SMALLINT,
+        date_month SMALLINT,
+        date_day SMALLINT
+      )
+    `);
+
+    await this.knex.raw(
+      `
+        INSERT INTO
+          release_date_info (release_id, date_year, date_month, date_day)
+        SELECT DISTINCT ON (release_id)
+          COALESCE(release_country.release, release_unknown_country.release) as release_id,
+          COALESCE(release_country.date_year, release_unknown_country.date_year) as date_year,
+          COALESCE(release_country.date_month, release_unknown_country.date_month) as date_month,
+          COALESCE(release_country.date_day, release_unknown_country.date_day) as date_day
+        FROM
+          release
+        LEFT OUTER JOIN
+          release_country ON release_country.release = release.id
+        LEFT OUTER JOIN
+          release_unknown_country ON release_unknown_country.release = release.id
+        WHERE
+          COALESCE(release_country.release, release_unknown_country.release) IS NOT NULL
+      `
+    );
+
+    await this.knex.raw(
+      "CREATE INDEX IF NOT EXISTS release_date_info_idx_date_year ON release_date_info (date_year)"
+    );
+
+    await this.knex.raw(
+      "CREATE INDEX IF NOT EXISTS release_date_info_idx_release_id ON release_date_info (release_id)"
+    );
   }
 
   async createIndexes() {
+    console.log("CREATING INDEXES!!!!!!");
+
     await this.knex.raw(
       "CREATE INDEX IF NOT EXISTS release_idx_name_search ON release USING GIN(to_tsvector('english', name))"
     );
@@ -76,6 +118,7 @@ export class MusicBrainzDb {
     let hasTable = await this.knex.schema.hasTable("label_release_count");
     let shouldRefreshTable = true;
     if (hasTable) {
+      // using the timestamp for this is a bit hackish
       let result = await this.knex("label_release_count").select("last_updated").limit(1);
       if (result && result.length > 0) {
         let last_updated: Date = result[0].last_updated;
@@ -103,13 +146,14 @@ export class MusicBrainzDb {
   ): Promise<Release[]> {
     // Might be used to allow to choose between multiple releases of the
     // same album on the same label in future
-    let limit = 5;
-
-    const coalescedDate = "coalesce(release_country.date_year, release_unknown_country.date_year)";
+    let limit = 1;
 
     let artistWhere = this.knex.raw("artist_credit.name = ?", artist);
     if (fuzzy) {
-      artistWhere = this.knex.raw("to_tsvector('english', artist_credit.name) @@ plainto_tsquery(?)", artist);
+      artistWhere = this.knex.raw(
+        "to_tsvector('english', artist_credit.name) @@ plainto_tsquery(?)",
+        artist
+      );
     }
 
     let nameWhere = this.knex.raw("release.name = ?", name);
@@ -117,7 +161,7 @@ export class MusicBrainzDb {
       nameWhere = this.knex.raw("to_tsvector('english', release.name) @@ plainto_tsquery(?)", name);
     }
 
-    let dateWhere = this.knex.raw(`${coalescedDate} = ?`, year);
+    let dateWhere = this.knex.raw("release_date_info.date_year = ?", year);
     if (fuzzy) {
       dateWhere = this.knex.raw("TRUE");
     }
@@ -130,12 +174,9 @@ export class MusicBrainzDb {
         "label.name as label_name",
         "label.gid as label_mbid",
         "label_release_count.count_approx as label_release_count",
-        "release_country.date_year as rc_year",
-        "release_unknown_country.date_year as uc_year",
-        this.knex.raw(coalescedDate + " as release_year")
+        "release_date_info.date_year as release_year"
       )
-      .leftOuterJoin("release_country", "release_country.release", "release.id")
-      .leftOuterJoin("release_unknown_country", "release_unknown_country.release", "release.id")
+      .leftOuterJoin("release_date_info", "release_date_info.release_id", "release.id")
       .innerJoin("release_label", "release_label.release", "release.id")
       .innerJoin("label", "label.id", "release_label.label")
       .innerJoin("label_release_count", "label_release_count.label_id", "label.id")
@@ -162,8 +203,6 @@ export class MusicBrainzDb {
 
       releases.push(release);
     }
-
-    console.log(releases);
 
     return releases;
   }

@@ -4,7 +4,7 @@ import { start } from "repl";
 import { Label } from "../lib/struct/Label";
 import { MbEntityType } from "../lib/struct/MbEntityType";
 import { Release } from "../lib/struct/Release";
-import SearchResult from "./SearchResult";
+import { SearchResultRelease } from "./SearchResultRelease";
 
 export default function SearchComponent() {
   const [searchText, setSearchText] = useState("");
@@ -53,7 +53,6 @@ export default function SearchComponent() {
   }
 
   useEffect(() => {
-    console.log("running effect");
     let timer = searchDelayed();
 
     //clear the timout when the searchText is changed.
@@ -78,10 +77,10 @@ export default function SearchComponent() {
       </form>
       <div>
         {results.map((result) => (
-          <SearchResult
+          <SearchResultRelease
             key={result.mbid}
             release={result}
-          ></SearchResult>
+          ></SearchResultRelease>
         ))}
       </div>
     </div>

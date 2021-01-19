@@ -1,11 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { SearchEngine } from "../../lib/fetcher/SearchEngine";
 import { Release } from "../../lib/struct/Release";
+import { ExecTimer } from "../../lib/util/ExecTimer";
 
 const DEFAULT_REQUEST_COUNT = 3;
 const MAX_REQUEST_COUNT = 10;
 
 let searchEngine = new SearchEngine();
+
+console.log("WE'VE SPUN UP A WHOLE NEW ENGINE BABBYYY");
 
 /**
  * The core search functionality of the application. Attempts to
@@ -41,13 +44,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  console.time("total release lookup");
+  let totalLookupTimer = new ExecTimer("total release lookup");
+  totalLookupTimer.timeStart();
   let releases = await searchEngine.searchRelease(q, 3);
-  console.timeEnd("total release lookup");
+  totalLookupTimer.timeEnd();
 
-  console.time("total label lookup");
   let labels = await searchEngine.searchLabel(q, 3);
-  console.timeEnd("total label lookup");
-  
+
   res.status(200).send({releases: releases, labels: labels});
 };
