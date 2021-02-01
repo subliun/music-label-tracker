@@ -1,5 +1,5 @@
 import React from "react";
-import { Label } from "../lib/struct/Label";
+import { Label } from "../../lib/struct/Label";
 import PlaceholderImage from "./PlaceholderImage";
 import styles from "./LabelStyles.module.css";
 import animStyles from "./Anim.module.css";

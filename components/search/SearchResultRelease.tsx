@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { MbEntityType } from "../lib/struct/MbEntityType";
-import { Release } from "../lib/struct/Release";
+import { MbEntityType } from "../../lib/struct/MbEntityType";
+import { Release } from "../../lib/struct/Release";
 import PlaceholderImage from "./PlaceholderImage";
 
 interface SearchResultProps {

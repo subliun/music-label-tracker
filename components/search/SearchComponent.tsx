@@ -1,9 +1,12 @@
 import result from "postcss/lib/result";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
+import { useCookies } from "react-cookie";
 import { start } from "repl";
-import { Label } from "../lib/struct/Label";
-import { MbEntityType } from "../lib/struct/MbEntityType";
-import { Release } from "../lib/struct/Release";
+import { useLocalStorage } from "../../lib/hooks/LocalStorageHook";
+import { useSelectedLabels } from "../../lib/hooks/SelectedLabelsHook";
+import { Label } from "../../lib/struct/Label";
+import { MbEntityType } from "../../lib/struct/MbEntityType";
+import { Release } from "../../lib/struct/Release";
 import { SearchResultLabel } from "./SearchResultLabel";
 import { SearchResultRelease } from "./SearchResultRelease";
 
@@ -12,6 +15,8 @@ export default function SearchComponent() {
   const [labels, setLabels] = useState<Label[]>([]);
   const [releases, setReleases] = useState<Release[]>([]);
   const latestResultTimeRef = useRef<number>(0);
+
+  const [selectedLabels, setSelectedLabels] = useSelectedLabels();
 
   async function onSearchPressed(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,6 +68,22 @@ export default function SearchComponent() {
     };
   }, [searchText]);
 
+  function onLabelAdded(label: Label) {
+    if (!selectedLabels.includes(label.mbid)) {
+      let newList = selectedLabels;
+      newList.push(label.mbid);
+      setSelectedLabels(newList);
+    }
+
+    console.log(selectedLabels);
+  }
+
+  function SearchHeading(props: {children: React.ReactNode}) {
+    return (
+      <p className="font-semibold text-lg tracking-wide">{props.children}</p>
+    );
+  }
+
   return (
     <div className="w-full px-14 max-w-3xl">
       <form method="GET" onSubmit={onSearchPressed}>
@@ -80,17 +101,25 @@ export default function SearchComponent() {
         ></input>
       </form>
 
-      <div className="pb-4 grid grid-cols-2 md:grid-cols-3 bg-white">
-        {labels.map((label) => (
-          <div className="flex justify-center">
-            <SearchResultLabel key={label.mbid} label={label}></SearchResultLabel>
-          </div>
-        ))}
-      </div>
-      <div>
-        {releases.map((release) => (
-          <div></div> //<SearchResultRelease key={release.mbid} release={release}></SearchResultRelease>
-        ))}
+      <div className="p-4 bg-white">
+        <SearchHeading>Labels</SearchHeading>
+        <div className="pb-4 grid grid-cols-2 md:grid-cols-3">
+          {labels.map((label) => (
+            <div className="flex justify-center">
+              <SearchResultLabel
+                key={label.mbid}
+                label={label}
+                onClick={(l) => onLabelAdded(l)}
+              ></SearchResultLabel>
+            </div>
+          ))}
+        </div>
+        <SearchHeading>Releases</SearchHeading>
+        <div>
+          {releases.map((release) => (
+            <div></div> //<SearchResultRelease key={release.mbid} release={release}></SearchResultRelease>
+          ))}
+        </div>
       </div>
     </div>
   );

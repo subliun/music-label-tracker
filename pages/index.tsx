@@ -1,6 +1,6 @@
 import Head from "next/head";
 import React from "react";
-import SearchComponent from "../components/SearchComponent";
+import SearchComponent from "../components/search/SearchComponent";
 
 const siteTitle="Music Label Tracker"
 
