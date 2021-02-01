@@ -2,17 +2,19 @@ import { NextApiRequest, NextApiResponse } from "next";
 import ProfilePictureExtractor from "../../../../lib/ProfilePictureExtractor";
 
 import Puppeteer from "puppeteer";
-import { SearchEngine } from "../../../../lib/fetcher/SearchEngine";
 
 import * as FileUtil from "../../../../lib/util/FileUtil";
 import * as Db from "../../../../lib/db/Db";
 import { MbEntityType } from "../../../../lib/struct/MbEntityType";
 import { MbEntity } from "../../../../lib/struct/MbEntity";
+import { ImageFetcher } from "../../../../lib/fetcher/ImageFetcher";
 
 let profileExtractor: ProfilePictureExtractor | null;
-let fetcher = new SearchEngine();
+let fetcher = new ImageFetcher();
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
+  console.log("hit image");
+  
   if (!profileExtractor) {
     profileExtractor = new ProfilePictureExtractor(await Puppeteer.launch());
   }
@@ -26,14 +28,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  let entityType = MbEntityType.LABEL; //req.query.entityType;
-  // if (!entityType || !(entityType === MbEntityType.LABEL || entityType === MbEntityType.RELEASE)) {
-  //   console.error("invalid entity type");
-  //   res.statusCode = 400;
-  //   res.end();
-  //   return;
-  // }
-
+  let entityType = MbEntityType.LABEL;
+  
   // Remove all dots to prevent path traversal
   let re = /\./g
   let safeMbid = unsafeMbid.replace(re, "");
@@ -42,11 +38,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   if (entityType === MbEntityType.LABEL) {
     imagePath = await fetcher.loadLabelImage(safeMbid, profileExtractor);
-  } else if (entityType === MbEntityType.RELEASE) {
-    // let release = await Db.readRelease(safeMbid);
-    // if (release) {
-    //   imagePath = await fetcher.loadReleaseGroupImage(release);
-    // }
   }
   
   console.log("Found image link: " + imagePath);

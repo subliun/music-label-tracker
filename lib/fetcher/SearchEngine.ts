@@ -14,24 +14,19 @@ import { SpotifyServerApi } from "../spotify/SpotifyServerApi";
 import * as DotEnvUtil from "../util/DotEnvUtil";
 import { ExecTimer } from "../util/ExecTimer";
 
-import {performance} from "perf_hooks";
+import { performance } from "perf_hooks";
 
 /**
  * Search for music labels and releases.
  */
 export class SearchEngine {
-  private mbApi: MusicBrainzApi;
   private mbDb: MusicBrainzDb;
 
   private spotifyApi;
 
   isInitialized: boolean;
 
-  private readonly labelImageCachePath = "cache/label_image_cache/";
-  private readonly releaseGroupImageCachePath = "cache/release_group_image_cache/";
-
   constructor() {
-    this.mbApi = new MusicBrainzApi();
     this.mbDb = new MusicBrainzDb();
     this.spotifyApi = new SpotifyServerApi();
 
@@ -65,7 +60,7 @@ export class SearchEngine {
    * Search for a given record label.
    */
   async searchLabel(q: string, limit: number): Promise<Label[]> {
-    return this.mbDb.searchLabel(q, 5);
+    return this.mbDb.searchLabel(q, limit);
   }
 
   private cleanAlbumName(name: string) {
@@ -140,7 +135,11 @@ export class SearchEngine {
         }
       }
     }
-    
+
+    //remove items with the [no label] label
+    let noLabelMbid = "157afde4-4bf5-4039-8ad2-5a15acc85176";
+    releases = releases.filter(release => release.label.mbid !== noLabelMbid);
+
     return releases;
   }
 
@@ -173,44 +172,8 @@ export class SearchEngine {
     let t1 = performance.now();
     this.count += 1;
     this.totalTime += t1 - t0;
-    console.log("AVERAGE DB TIME IS: " + (this.totalTime / this.count));
+    console.log("AVERAGE DB TIME IS: " + this.totalTime / this.count);
 
     return releases;
-  }
-
-  /**
-   * Try to get the path of a photo for the label associated with the provided label id.
-   *
-   * Will try to use the cached image first, then download an image from the associated mbid's url links.
-   */
-  async loadLabelImage(
-    mbid: string,
-    profileExtractor: ProfilePictureExtractor
-  ): Promise<string | null> {
-    let filePath = this.labelImageCachePath + mbid + ".jpg";
-    let exists = await FileUtil.exists(filePath);
-
-    if (exists) {
-      return filePath;
-    }
-
-    let twitterUrls = await this.mbApi.getCertainUrls(mbid, "twitter.com");
-    let discogsUrls = await this.mbApi.getCertainUrls(mbid, "discogs.com");
-
-    console.log(twitterUrls);
-
-    if (twitterUrls.length > 0) {
-      let imageUrl = await profileExtractor.extractTwitterPhotoUrl(twitterUrls[0]);
-
-      if (imageUrl) {
-        //Cache image
-        await FileUtil.createFolder(process.cwd() + "/" + this.labelImageCachePath);
-        await FileUtil.download(imageUrl, filePath);
-
-        return filePath;
-      }
-    }
-
-    return null;
   }
 }

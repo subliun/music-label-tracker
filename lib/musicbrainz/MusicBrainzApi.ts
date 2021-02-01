@@ -108,17 +108,6 @@ export class MusicBrainzApi {
       .filter((urlString: string) => urlString); // check that the url is defined
   }
 
-  /**
-   * Get the urls associated with label 'labelMbid', but only those that include the string 'include'.
-   */
-  async getCertainUrls(labelMbid: string, include: string) {
-    let urls = await this.getLabelUrls(labelMbid);
-
-    return urls.filter((urlString: string) => {
-      return urlString.includes(include);
-    });
-  }
-
   async getLabelReleases(labelMbid: string, offset: number = 0): Promise<ReleaseLookupResult> {
     let params = new URLSearchParams();
     params.append("label", labelMbid);

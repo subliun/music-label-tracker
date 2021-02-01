@@ -4,11 +4,13 @@ import { start } from "repl";
 import { Label } from "../lib/struct/Label";
 import { MbEntityType } from "../lib/struct/MbEntityType";
 import { Release } from "../lib/struct/Release";
+import { SearchResultLabel } from "./SearchResultLabel";
 import { SearchResultRelease } from "./SearchResultRelease";
 
 export default function SearchComponent() {
   const [searchText, setSearchText] = useState("");
-  const [results, setResults] = useState<Release[]>([]);
+  const [labels, setLabels] = useState<Label[]>([]);
+  const [releases, setReleases] = useState<Release[]>([]);
   const latestResultTimeRef = useRef<number>(0);
 
   async function onSearchPressed(event: FormEvent<HTMLFormElement>) {
@@ -19,7 +21,7 @@ export default function SearchComponent() {
 
   async function search() {
     if (searchText.length === 0) {
-      setResults([]);
+      setReleases([]);
       return;
     }
 
@@ -32,11 +34,10 @@ export default function SearchComponent() {
       method: "GET",
     }).then((response) => response.json());
 
-    let releases = result.releases;
-
     //prevent old, slow requests from overwriting fresh ones
     if (searchTime > latestResultTimeRef.current) {
-      setResults(releases);
+      setLabels(result.labels);
+      setReleases(result.releases);
       latestResultTimeRef.current = searchTime;
     }
   }
@@ -57,11 +58,13 @@ export default function SearchComponent() {
 
     //clear the timout when the searchText is changed.
     //this prevents the search from running if it hasn't been run already
-    return () => { clearTimeout(timer); };
+    return () => {
+      clearTimeout(timer);
+    };
   }, [searchText]);
 
   return (
-    <div className="w-1/3">
+    <div className="w-full px-14 max-w-3xl">
       <form method="GET" onSubmit={onSearchPressed}>
         <input
           type="text"
@@ -73,14 +76,20 @@ export default function SearchComponent() {
           onChange={(e) => {
             setSearchText(e.target.value);
           }}
+          placeholder="Enter a label (e.g. Sub Pop) or release (e.g. Titanic Rising)"
         ></input>
       </form>
+
+      <div className="pb-4 grid grid-cols-2 md:grid-cols-3 bg-white">
+        {labels.map((label) => (
+          <div className="flex justify-center">
+            <SearchResultLabel key={label.mbid} label={label}></SearchResultLabel>
+          </div>
+        ))}
+      </div>
       <div>
-        {results.map((result) => (
-          <SearchResultRelease
-            key={result.mbid}
-            release={result}
-          ></SearchResultRelease>
+        {releases.map((release) => (
+          <div></div> //<SearchResultRelease key={release.mbid} release={release}></SearchResultRelease>
         ))}
       </div>
     </div>
