@@ -26,6 +26,7 @@ export default function SearchComponent() {
 
   async function search() {
     if (searchText.length === 0) {
+      setLabels([]);
       setReleases([]);
       return;
     }
@@ -85,7 +86,7 @@ export default function SearchComponent() {
   }
 
   return (
-    <div className="w-full px-14 max-w-3xl">
+    <div className="w-full px-6 max-w-md sm:max-w-3xl">
       <form method="GET" onSubmit={onSearchPressed}>
         <input
           type="text"
@@ -103,9 +104,9 @@ export default function SearchComponent() {
 
       <div className="p-4 bg-white">
         <SearchHeading>Labels</SearchHeading>
-        <div className="pb-4 grid grid-cols-2 md:grid-cols-3">
+        <div className="space-y-6 sm:space-y-0 my-4 flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3">
           {labels.map((label) => (
-            <div className="flex justify-center">
+            <div className="flex sm:justify-center">
               <SearchResultLabel
                 key={label.mbid}
                 label={label}
@@ -117,7 +118,7 @@ export default function SearchComponent() {
         <SearchHeading>Releases</SearchHeading>
         <div>
           {releases.map((release) => (
-            <div></div> //<SearchResultRelease key={release.mbid} release={release}></SearchResultRelease>
+            <SearchResultRelease key={release.mbid} release={release}></SearchResultRelease>
           ))}
         </div>
       </div>

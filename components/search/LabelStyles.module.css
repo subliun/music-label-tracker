@@ -1,43 +1,48 @@
 .label-card {
 }
 
-.label-overlay {
-  transition: all var(--label-box-transition-duration, 0) cubic-bezier(0.445, 0.05, 0.55, 0.95);
-  opacity: 0; 
-}
-
-.label-card:hover .label-overlay {
-  opacity: 1;
-}
-
 .label-card-main-image {
-  @apply mt-4;
-  @apply w-28;
-  @apply h-28;
   border-radius: 50%;
-  filter: blur(0rem);
-
-  transition: all var(--label-box-transition-duration, 0) cubic-bezier(0.445, 0.05, 0.55, 0.95);
 }
 
-.label-card:hover .label-card-main-image {
-  @apply -mt-1;
-
-  @apply w-60;
-  @apply h-60;
-  border-radius: 0%;
-  filter: blur(0.2rem);
-}
-
+/*I like the idea of the record stopping when you mouse over it as an Easter egg*/  
 .label-card:hover .label-card-main-image img {
   animation-play-state: paused;
 }
 
-.label-card .main-text {
-  transition: all linear calc(var(--label-box-transition-duration, 0) / 2);
-  opacity: 1;
-}
-
-.label-card:hover .main-text {
-  opacity: 0;
+@media (min-width: 640px) {  
+  .label-overlay {
+    transition: all var(--label-box-transition-duration, 0) cubic-bezier(0.445, 0.05, 0.55, 0.95);
+    opacity: 0;
+  }
+  
+  .label-card:hover .label-overlay {
+    opacity: 1;
+  }
+  
+  .label-card-main-image {
+    border-radius: 50%;
+    filter: blur(0rem);
+  
+    transition: all var(--label-box-transition-duration, 0) cubic-bezier(0.445, 0.05, 0.55, 0.95);
+  }
+  
+  .label-card:hover .label-card-main-image {
+    @apply -mt-1;
+  
+    @apply w-60;
+    @apply h-60;
+    border-radius: 0%;
+    filter: blur(0.2rem);
+  }
+  
+  .label-card .main-text {
+    transition: all linear calc(var(--label-box-transition-duration, 0) / 2);
+    opacity: 1;
+  }
+  
+  .label-card:hover .main-text {
+    opacity: 0;
+  }
+    
 }

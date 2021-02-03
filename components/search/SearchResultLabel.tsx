@@ -13,12 +13,34 @@ interface SearchResultProps {
 export function SearchResultLabel(props: SearchResultProps) {
   return (
     <button
-      className={`${styles["label-card"]} mt-4 flex flex-none flex-col`}
+      className={`${styles["label-card"]} w-full sm:w-auto flex flex-col`}
       onClick={() => props.onClick(props.label)}
     >
-      <AddLabelCardOverlay>
+      <div className="hidden sm:block">
+        <AddLabelCardOverlay>
+          <LabelCard label={props.label}></LabelCard>
+        </AddLabelCardOverlay>
+      </div>
+
+      <div className="flex sm:hidden flex-row justify-between">
         <LabelCard label={props.label}></LabelCard>
-      </AddLabelCardOverlay>
+        <div className="sm:hidden w-8 h-8 flex-none self-center flex justify-center align-center rounded-sm bg-blue-500 hover:bg-blue-600 shadow">
+          <svg
+            className=""
+            xmlns="http://www.w3.org/2000/svg"
+            fill="white"
+            viewBox="0 0 24 24"
+            stroke="white"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+        </div>
+      </div>
     </button>
   );
 }

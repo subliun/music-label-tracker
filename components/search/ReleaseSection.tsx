@@ -3,11 +3,11 @@ import { MbEntityType } from "../../lib/struct/MbEntityType";
 import { Release } from "../../lib/struct/Release";
 import PlaceholderImage from "./PlaceholderImage";
 
-interface SearchResultProps {
+interface ReleaseSectionProps {
   release: Release;
 }
 
-export function SearchResultRelease(props: SearchResultProps) {
+export function SearchResultRelease(props: ReleaseSectionProps) {
   let [isReleaseImageLoaded, setReleaseImageLoaded] = useState(false);
 
   let imageUrl = props.release.photoUrl;
@@ -31,21 +31,6 @@ export function SearchResultRelease(props: SearchResultProps) {
           <p className="text-lg">{props.release.name}</p>
           <p className="mt-1 text-sm">{props.release.artistName}</p>
         </div>
-      </div>
-
-      <div className="ml-4 flex flex-col">
-        <div className="flex-none self-center w-36 h-36 border border-gray-100 rounded-full">
-          <PlaceholderImage
-            className=""
-            imageClassName={"w-full h-full rounded-full"}
-            src={"/api/entity/" + props.release.label.mbid + "/image"}
-            placeholderSrc="vinyl_icon_simple.svg"
-          ></PlaceholderImage>
-        </div>
-        <p className="mt-1">
-          {props.release.label.name + ` (${props.release.label.releaseCount})`}
-        </p>
-        <p>{props.release.label.mbid}</p>
       </div>
     </div>
   );

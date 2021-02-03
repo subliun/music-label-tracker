@@ -28,25 +28,35 @@ function scaledTextSize(text: string): string {
 }
 
 export default function LabelCard(props: LabelCardProps) {
-  let textSize = scaledTextSize(props.label.name);
+  let textSizeBig = scaledTextSize(props.label.name);
+  let textSizeSmall = "text-lg";
 
   return (
-    <div className={`overflow-hidden w-48 h-56 flex-none flex flex-col bg-white shadow rounded-xl`}>
-      <PlaceholderImage
-        className={`${styles["label-card-main-image"]} flex-none self-center overflow-hidden`}
-        imageClassName={"border border-gray-200"}
-        src={"/api/entity/" + props.label.mbid + "/image"}
-        placeholderExtraClassName={animStyles.spin}
-        placeholderSrc="vinyl_icon_simple.svg"
-      ></PlaceholderImage>
+      <div
+        className={`overflow-hidden w-full h-18 sm:w-48 sm:h-56 sm:flex-none flex flex-row sm:flex-col bg-white sm:shadow rounded-xl`}
+      >
+        <PlaceholderImage
+          className={`${styles["label-card-main-image"]} w-14 h-14 sm:w-28 sm:h-28 sm:mt-4 flex-none self-center overflow-hidden`}
+          imageClassName={"border border-gray-200"}
+          src={"/api/entity/" + props.label.mbid + "/image"}
+          placeholderExtraClassName={animStyles.spin}
+          placeholderSrc="vinyl_icon_simple.svg"
+        ></PlaceholderImage>
 
-      <div className={`${styles["main-text"]} h-full flex flex-col justify-center align-center`}>
-        <p
-          className={`px-6 py-2 overflow-hidden text-center ${textSize} tracking-wide leading-snug font-medium`}
+        <div
+          className={`${styles["main-text"]} h-full flex flex-col justify-center align-center`}
         >
-          {props.label.name}
-        </p>
+          <div className="px-4 sm:px-6 overflow-hidden text-left sm:text-center">
+            <p
+              className={`${textSizeSmall} sm:${textSizeBig} tracking-wide leading-tight sm:leading-snug font-medium`}
+            >
+              {props.label.name}
+            </p>
+            <p className="block sm:hidden font-light text-sm">
+              {props.label.releaseCount} releases
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
   );
 }

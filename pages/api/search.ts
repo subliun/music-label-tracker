@@ -8,8 +8,6 @@ const MAX_REQUEST_COUNT = 10;
 
 let searchEngine = new SearchEngine();
 
-console.log("WE'VE SPUN UP A WHOLE NEW ENGINE BABBYYY");
-
 /**
  * The core search functionality of the application. Attempts to
  * find matching labels from the query string.
