@@ -2,15 +2,18 @@ import React, { useState } from "react";
 import { useCookies } from "react-cookie";
 import { Label } from "../../lib/struct/Label";
 import AddLabelCardOverlay from "./AddLabelCardOverlay";
-import LabelCard from "./LabelCard";
-import styles from "./LabelStyles.module.css";
+import LabelCard from "../label/LabelCard";
+import styles from "./../label/LabelStyles.module.css";
+import { Release } from "../../lib/struct/Release";
+import ResultContentSmall from "./ResultContentSmall";
 
 interface SearchResultProps {
   label: Label;
+  release?: Release;
   onClick: (label: Label) => void;
 }
 
-export function SearchResultLabel(props: SearchResultProps) {
+export function SearchResult(props: SearchResultProps) {
   return (
     <button
       className={`${styles["label-card"]} w-full sm:w-auto flex flex-col`}
@@ -23,7 +26,7 @@ export function SearchResultLabel(props: SearchResultProps) {
       </div>
 
       <div className="flex sm:hidden flex-row justify-between">
-        <LabelCard label={props.label}></LabelCard>
+        <ResultContentSmall label={props.label} release={props.release}></ResultContentSmall>
         <div className="sm:hidden w-8 h-8 flex-none self-center flex justify-center align-center rounded-sm bg-blue-500 hover:bg-blue-600 shadow">
           <svg
             className=""

@@ -1,4 +1,4 @@
-import styles from "./LabelStyles.module.css";
+import styles from "./../label/LabelStyles.module.css";
 
 export default function AddLabelCardOverlay(props: { children: React.ReactNode }) {
   return (

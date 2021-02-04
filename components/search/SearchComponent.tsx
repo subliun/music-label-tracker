@@ -1,14 +1,13 @@
-import result from "postcss/lib/result";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
-import { useCookies } from "react-cookie";
-import { start } from "repl";
-import { useLocalStorage } from "../../lib/hooks/LocalStorageHook";
 import { useSelectedLabels } from "../../lib/hooks/SelectedLabelsHook";
 import { Label } from "../../lib/struct/Label";
-import { MbEntityType } from "../../lib/struct/MbEntityType";
 import { Release } from "../../lib/struct/Release";
-import { SearchResultLabel } from "./SearchResultLabel";
-import { SearchResultRelease } from "./SearchResultRelease";
+import { SearchResult } from "./SearchResult";
+
+interface Result {
+  label: Label;
+  release?: Release;
+}
 
 export default function SearchComponent() {
   const [searchText, setSearchText] = useState("");
@@ -79,10 +78,17 @@ export default function SearchComponent() {
     console.log(selectedLabels);
   }
 
-  function SearchHeading(props: {children: React.ReactNode}) {
-    return (
-      <p className="font-semibold text-lg tracking-wide">{props.children}</p>
-    );
+  function compileResults() {
+    let results: Result[] = [];
+    for (let label of labels) {
+      results.push({label: label, release: undefined});
+    }
+
+    for (let release of releases) {
+      results.push({label: release.label, release: release});
+    }
+
+    return results;
   }
 
   return (
@@ -103,22 +109,15 @@ export default function SearchComponent() {
       </form>
 
       <div className="p-4 bg-white">
-        <SearchHeading>Labels</SearchHeading>
         <div className="space-y-6 sm:space-y-0 my-4 flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3">
-          {labels.map((label) => (
-            <div className="flex sm:justify-center">
-              <SearchResultLabel
-                key={label.mbid}
-                label={label}
+          {compileResults().map((result) => (
+            <div key={result.label.mbid} className="flex sm:justify-center">
+              <SearchResult
+                label={result.label}
+                release={result.release}
                 onClick={(l) => onLabelAdded(l)}
-              ></SearchResultLabel>
+              ></SearchResult>
             </div>
-          ))}
-        </div>
-        <SearchHeading>Releases</SearchHeading>
-        <div>
-          {releases.map((release) => (
-            <SearchResultRelease key={release.mbid} release={release}></SearchResultRelease>
           ))}
         </div>
       </div>

@@ -7,7 +7,7 @@ interface ReleaseSectionProps {
   release: Release;
 }
 
-export function SearchResultRelease(props: ReleaseSectionProps) {
+export function ReleaseSection(props: ReleaseSectionProps) {
   let [isReleaseImageLoaded, setReleaseImageLoaded] = useState(false);
 
   let imageUrl = props.release.photoUrl;
@@ -15,7 +15,7 @@ export function SearchResultRelease(props: ReleaseSectionProps) {
   return (
     <div className="flex flex-row justify-between px-6 py-4 bg-white">
       <div className="flex flex-row items-center">
-        <div className={"flex-none w-24 h-24"}>
+        <div className={"flex-none w-14"}>
           <img
             className={
               "w-full h-full rounded transition-opacity" +
