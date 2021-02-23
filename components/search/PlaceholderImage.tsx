@@ -6,6 +6,9 @@ interface PlaceholderImageProps {
   src: string;
   placeholderExtraClassName?: string;
   placeholderSrc: string;
+
+  onError?: () => void
+  onLoaded?: () => void
 }
 
 export default function PlaceholderImage(props: PlaceholderImageProps) {
@@ -23,9 +26,11 @@ export default function PlaceholderImage(props: PlaceholderImageProps) {
         src={props.src}
         onError={() => {
           setLoaded(false);
+          if(props.onError) props.onError();
         }}
         onLoad={() => {
           setLoaded(true);
+          if(props.onLoaded) props.onLoaded();
         }}
       ></img>
 

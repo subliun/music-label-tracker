@@ -19,7 +19,7 @@ export function SearchResult(props: SearchResultProps) {
       className={`${styles["label-card"]} w-full sm:w-auto flex flex-col`}
       onClick={() => props.onClick(props.label)}
     >
-      <div className="hidden sm:block">
+      <div className="hidden sm:block mb-6">
         <AddLabelCardOverlay>
           <LabelCard label={props.label}></LabelCard>
         </AddLabelCardOverlay>

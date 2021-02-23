@@ -60,7 +60,8 @@ export class SearchEngine {
    * Search for a given record label.
    */
   async searchLabel(q: string, limit: number): Promise<Label[]> {
-    return this.mbDb.searchLabel(q, limit);
+    let cleaned = q.trim().toLowerCase()
+    return this.mbDb.searchLabel(cleaned, limit);
   }
 
   private cleanAlbumName(name: string) {

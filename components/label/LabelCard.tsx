@@ -36,7 +36,7 @@ export default function LabelCard(props: LabelCardProps) {
         className={`
         overflow-hidden 
         w-full h-18 sm:w-48 sm:h-56 sm:flex-none 
-        flex flex-row sm:flex-col 
+        flex flex-row sm:flex-col sm:items-center
         bg-white sm:shadow rounded-xl`}
       >
 

@@ -9,5 +9,5 @@ html, body, #__next {
 }
 
 :root {
-  --label-box-transition-duration: 0.3s;
+  --label-box-transition-duration: 0.2s;
 }

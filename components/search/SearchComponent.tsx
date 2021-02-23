@@ -2,19 +2,19 @@ import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { useSelectedLabels } from "../../lib/hooks/SelectedLabelsHook";
 import { Label } from "../../lib/struct/Label";
 import { Release } from "../../lib/struct/Release";
+import NoSearchResults from "./NoSearchResults";
 import { SearchResult } from "./SearchResult";
-
-interface Result {
-  label: Label;
-  release?: Release;
-}
+import { SearchResultData } from "./SearchResultData";
+import SearchResultsSection from "./SearchResultsSection";
 
 export default function SearchComponent() {
   const [searchText, setSearchText] = useState("");
   const [labels, setLabels] = useState<Label[]>([]);
   const [releases, setReleases] = useState<Release[]>([]);
+  
   const latestResultTimeRef = useRef<number>(0);
-
+  const [loading, setLoading] = useState(false);
+  
   const [selectedLabels, setSelectedLabels] = useSelectedLabels();
 
   async function onSearchPressed(event: FormEvent<HTMLFormElement>) {
@@ -43,12 +43,15 @@ export default function SearchComponent() {
     if (searchTime > latestResultTimeRef.current) {
       setLabels(result.labels);
       setReleases(result.releases);
+      setLoading(false);
       latestResultTimeRef.current = searchTime;
     }
   }
 
   //Search but only after some delay.
   function searchDelayed() {
+    setLoading(true);
+
     const startSearchText = searchText;
     const delay = 200;
     let searchTimer = setTimeout(() => {
@@ -79,13 +82,16 @@ export default function SearchComponent() {
   }
 
   function compileResults() {
-    let results: Result[] = [];
+    let results: SearchResultData[] = [];
     for (let label of labels) {
-      results.push({label: label, release: undefined});
+      results.push({ label: label, release: undefined });
     }
 
     for (let release of releases) {
-      results.push({label: release.label, release: release});
+      let seen = results.map((r) => r.label.mbid).includes(release.label.mbid);
+      if (!seen) {
+        results.push({ label: release.label, release: release });
+      }
     }
 
     return results;
@@ -108,19 +114,7 @@ export default function SearchComponent() {
         ></input>
       </form>
 
-      <div className="p-4 bg-white">
-        <div className="space-y-6 sm:space-y-0 my-4 flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3">
-          {compileResults().map((result) => (
-            <div key={result.label.mbid} className="flex sm:justify-center">
-              <SearchResult
-                label={result.label}
-                release={result.release}
-                onClick={(l) => onLabelAdded(l)}
-              ></SearchResult>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SearchResultsSection results={compileResults()} loading={loading} onLabelAdded={onLabelAdded} searchText={searchText}></SearchResultsSection>
     </div>
   );
 }
