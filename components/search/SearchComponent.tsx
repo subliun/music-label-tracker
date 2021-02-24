@@ -2,6 +2,7 @@ import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { useSelectedLabels } from "../../lib/hooks/SelectedLabelsHook";
 import { Label } from "../../lib/struct/Label";
 import { Release } from "../../lib/struct/Release";
+import ClearInputButton from "./ClearInputButton";
 import NoSearchResults from "./NoSearchResults";
 import { SearchResult } from "./SearchResult";
 import { SearchResultData } from "./SearchResultData";
@@ -100,18 +101,21 @@ export default function SearchComponent() {
   return (
     <div className="w-full px-6 max-w-md sm:max-w-3xl">
       <form method="GET" onSubmit={onSearchPressed}>
-        <input
-          type="text"
-          className="w-full h-12 p-4 shadow-md"
-          name="q"
-          aria-label="Search"
-          autoComplete={"off"}
-          value={searchText}
-          onChange={(e) => {
-            setSearchText(e.target.value);
-          }}
-          placeholder="Enter a label (e.g. Sub Pop) or release (e.g. Titanic Rising)"
-        ></input>
+        <div className="relative w-full h-12 z-10 flex justify-between bg-white shadow-md">
+          <input
+            type="search"
+            className="w-full p-4 appearance-none text-lg italic"
+            name="q"
+            aria-label="Search"
+            autoComplete={"off"}
+            value={searchText}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+            }}
+            placeholder="Enter a label (e.g. Sub Pop) or release (e.g. Titanic Rising)"
+          ></input>
+          <ClearInputButton className="block sm:hidden w-8 h-8 mr-2 self-center" onClick={() => setSearchText("")}></ClearInputButton>
+        </div>
       </form>
 
       <SearchResultsSection results={compileResults()} loading={loading} onLabelAdded={onLabelAdded} searchText={searchText}></SearchResultsSection>

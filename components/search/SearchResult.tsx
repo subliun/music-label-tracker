@@ -25,11 +25,17 @@ export function SearchResult(props: SearchResultProps) {
         </AddLabelCardOverlay>
       </div>
 
-      <div className="flex sm:hidden flex-row justify-between">
+      <div className="w-full flex sm:hidden flex-row justify-between">
         <ResultContentSmall label={props.label} release={props.release}></ResultContentSmall>
-        <div className="sm:hidden w-8 h-8 flex-none self-center flex justify-center align-center rounded-sm bg-blue-500 hover:bg-blue-600 shadow">
+
+        <button className={`
+          sm:hidden 
+          w-10 h-10 flex-none self-center 
+          flex justify-center align-center 
+          rounded-sm bg-blue-500 hover:bg-blue-600 shadow`}>
+            
           <svg
-            className=""
+            className="absolute w-10 h-10"
             xmlns="http://www.w3.org/2000/svg"
             fill="white"
             viewBox="0 0 24 24"
@@ -42,7 +48,7 @@ export function SearchResult(props: SearchResultProps) {
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
-        </div>
+        </button>
       </div>
     </button>
   );

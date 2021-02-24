@@ -13,7 +13,7 @@ export default function LabelCardImage(props: LabelCardImageProps) {
   return (
     <PlaceholderImage
       className={`${props.className} ${styles["label-card-main-image"]} w-14 h-14 sm:w-28 sm:h-28 sm:mt-4 flex-none overflow-hidden`}
-      imageClassName={"border border-gray-200"}
+      imageClassName={""}
       src={"/api/entity/" + props.label.mbid + "/image"}
       placeholderExtraClassName={animStyles.spin}
       placeholderSrc="vinyl_icon_simple.svg"

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Label } from "../../lib/struct/Label";
 import { Release } from "../../lib/struct/Release";
+import { TextUtil } from "../../lib/util/TextUtil";
 import LabelCardImage from "../label/LabelCardImage";
 import styles from "./../label/LabelStyles.module.css";
 import PlaceholderImage from "./PlaceholderImage";
@@ -14,7 +15,8 @@ export default function ResultContentSmall(props: ResultContentSmallProps) {
   let [releaseImageSize, setReleaseImageSize] = useState("w-8 h-8")
 
   let textSizeSmall = "text-xl";
-
+  let maxNameLength = 30;
+  
   function SubText() {
     if (props.release) {
       let displayYear = "";
@@ -43,8 +45,7 @@ export default function ResultContentSmall(props: ResultContentSmallProps) {
   return (
     <div
       className={`
-      relative 
-        w-full h-22
+      relative h-22
         flex flex-row`}
     >
       <LabelCardImage className="flex-none self-start" label={props.label}></LabelCardImage>
@@ -55,19 +56,19 @@ export default function ResultContentSmall(props: ResultContentSmallProps) {
           imageClassName={"rounded-md"}
           src={props.release?.photoUrl as string}
           placeholderSrc="vinyl_icon_simple.svg"
-          onError={() => {
-            console.log("On error triggered")
-            setReleaseImageSize("w-16 h-16")
-          }}
         ></PlaceholderImage>
       </div>}
+      
+      {props.release && 
+        <div className="h-22 mb-10"></div>
+      }
 
       <div
         className={`${styles["main-text"]} h-full flex flex-col justify-start align-center`}
       >
         <div className="px-5 overflow-hidden text-left">
           <p className={`${textSizeSmall} tracking-wide leading-tight font-medium`}>
-            {props.label.name}
+            {TextUtil.ellipsize(props.label.name, maxNameLength)}
           </p>
           <p className="block font-light mt-0.5">
             <SubText></SubText>

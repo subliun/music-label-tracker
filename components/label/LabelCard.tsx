@@ -1,5 +1,6 @@
 import React from "react";
 import { Label } from "../../lib/struct/Label";
+import { TextUtil } from "../../lib/util/TextUtil";
 import PlaceholderImage from "../search/PlaceholderImage";
 import LabelCardImage from "./LabelCardImage";
 import styles from "./LabelStyles.module.css";
@@ -13,8 +14,8 @@ function scaledTextSize(text: string): string {
 
   let sizes = {
     8: "text-2xl",
-    15: "text-xl",
-    40: "text-md",
+    12: "text-xl",
+    20: "text-md",
     60: "text-sm",
   };
 
@@ -29,35 +30,32 @@ function scaledTextSize(text: string): string {
 
 export default function LabelCard(props: LabelCardProps) {
   let textSizeBig = scaledTextSize(props.label.name);
-  let textSizeSmall = "text-lg";
+  let maxNameLength = 40;
 
   return (
       <div
         className={`
         overflow-hidden 
-        w-full h-18 sm:w-48 sm:h-56 sm:flex-none 
-        flex flex-row sm:flex-col sm:items-center
-        bg-white sm:shadow rounded-xl`}
+        w-48 h-56 flex-none 
+        flex flex-col items-center
+        bg-white shadow rounded-xl`}
       >
 
         <LabelCardImage label={props.label}></LabelCardImage>
 
         <div
-          className={`${styles["main-text"]} h-full flex flex-col justify-center align-center`}
+          className={`${styles["main-text"]} h-full flex flex-col justify-start`}
         >
-          <div className="px-4 sm:px-6 overflow-hidden text-left sm:text-center">
+          <div className="h-16 px-6 flex flex-col justify-center overflow-hidden text-center">
             <p
-              className={`${textSizeSmall} sm:${textSizeBig} tracking-wide leading-tight sm:leading-snug font-medium`}
+              className={`${textSizeBig} tracking-wide leading-tight font-medium`}
             >
-              {props.label.name}
-            </p>
-            <p className="block sm:hidden font-light text-sm">
-              {
-              //{props.label.releaseCount + " " + (props.label.releaseCount === 1 ? "release" : "releases")}
-              }
-              released <span className="font-normal">Titanic Rising</span>
+              {TextUtil.ellipsize(props.label.name, maxNameLength)}
             </p>
           </div>
+          <p className="font-light text-sm">
+              {props.label.releaseCount + " " + (props.label.releaseCount === 1 ? "release" : "releases")}
+            </p>
         </div>
       </div>
   );
