@@ -1,6 +1,7 @@
 import Head from "next/head";
 import React from "react";
 import AddedLabelsComponent from "../components/added/AddedLabelsComponent";
+import MainComponent from "../components/main/MainComponent";
 import SearchComponent from "../components/search/SearchComponent";
 
 const siteTitle = "Music Label Tracker"
@@ -15,8 +16,7 @@ export default function Home() {
 
       <main className="h-full flex flex-col items-center space-y-20 text-sans">
         <p className="mt-36 p-4 text-7xl bg-blue-500">{siteTitle}</p>
-        <SearchComponent></SearchComponent>
-        <AddedLabelsComponent></AddedLabelsComponent>
+        <MainComponent></MainComponent>
       </main>
     </div>
   );

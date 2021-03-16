@@ -16,6 +16,10 @@ interface SearchResultsSectionProps {
 export default function SearchResultsSection(props: SearchResultsSectionProps) {
   let results = props.results;
 
+  if (props.searchText.length == 0) {
+    return null;
+  }
+
   if (results.length != 0) {
     return (
       <div className="p-4 bg-white">

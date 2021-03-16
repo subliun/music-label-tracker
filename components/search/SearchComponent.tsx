@@ -8,15 +8,17 @@ import { SearchResult } from "./SearchResult";
 import { SearchResultData } from "./SearchResultData";
 import SearchResultsSection from "./SearchResultsSection";
 
-export default function SearchComponent() {
+interface SearchComponentProps {
+  onLabelAdded: (label: Label) => void;
+}
+
+export default function SearchComponent(props: SearchComponentProps) {
   const [searchText, setSearchText] = useState("");
   const [labels, setLabels] = useState<Label[]>([]);
   const [releases, setReleases] = useState<Release[]>([]);
   
   const latestResultTimeRef = useRef<number>(0);
   const [loading, setLoading] = useState(false);
-  
-  const [selectedLabels, setSelectedLabels] = useSelectedLabels();
 
   async function onSearchPressed(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,8 +54,7 @@ export default function SearchComponent() {
   //Search but only after some delay.
   function searchDelayed() {
     setLoading(true);
-
-    const startSearchText = searchText;
+    
     const delay = 200;
     let searchTimer = setTimeout(() => {
       search();
@@ -73,13 +74,7 @@ export default function SearchComponent() {
   }, [searchText]);
 
   function onLabelAdded(label: Label) {
-    if (!selectedLabels.includes(label.mbid)) {
-      let newList = selectedLabels;
-      newList.push(label.mbid);
-      setSelectedLabels(newList);
-    }
-
-    console.log(selectedLabels);
+    props.onLabelAdded(label);
   }
 
   function compileResults() {
@@ -104,7 +99,7 @@ export default function SearchComponent() {
         <div className="relative w-full h-12 z-10 flex justify-between bg-white shadow-md">
           <input
             type="search"
-            className="w-full p-4 appearance-none text-lg italic"
+            className="w-full p-4 appearance-none text-lg"
             name="q"
             aria-label="Search"
             autoComplete={"off"}

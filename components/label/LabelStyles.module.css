@@ -1,4 +1,5 @@
 .label-card {
+  opacity: 1;
 }
 
 .label-card-main-image {
@@ -6,7 +7,7 @@
 }
 
 /*I like the idea of the record stopping when you mouse over it as an Easter egg*/  
-.label-card:hover .label-card-main-image img {
+.label-overlay:hover .label-card-main-image img {
   animation-play-state: paused;
 }
 
@@ -16,7 +17,7 @@
     opacity: 0;
   }
   
-  .label-card:hover .label-overlay {
+  .label-overlay-parent .label-overlay:hover {
     opacity: 1;
   }
   
@@ -27,7 +28,7 @@
     transition: all var(--label-box-transition-duration, 0) cubic-bezier(0.445, 0.05, 0.55, 0.95);
   }
   
-  .label-card:hover .label-card-main-image {
+  .label-overlay-parent:hover .label-card-main-image {
     @apply -mt-1;
   
     @apply w-60;
@@ -41,7 +42,7 @@
     opacity: 1;
   }
   
-  .label-card:hover .main-text {
+  .label-overlay-parent:hover .main-text {
     opacity: 0;
   }
     

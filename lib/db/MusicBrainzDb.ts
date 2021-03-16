@@ -207,6 +207,27 @@ export class MusicBrainzDb {
     return releases;
   }
 
+  private rowToLabel(row: any) {
+    return {
+      mbid: row.mbid,
+      name: row.name,
+      releaseCount: row.release_count,
+    };
+  }
+
+  async getLabels(mbids: string[]): Promise<Label[]> {
+    let rows = await this.knex("label")
+      .select("gid as mbid", "name", "label_release_count.count_approx as release_count")
+      .leftOuterJoin("label_release_count", "label_release_count.label_id", "label.id")
+      .whereIn("gid", mbids)
+    
+    let labels: Label[] = rows.map((row) => {
+      return this.rowToLabel(row);
+    });
+
+    return labels;
+  }
+
   async searchLabel(q: string, limit: number): Promise<Label[]> {
     let rows = await this.knex("label")
       .select("gid as mbid", "name", "label_release_count.count_approx as release_count")
@@ -216,11 +237,7 @@ export class MusicBrainzDb {
       .limit(limit);
 
     let labels: Label[] = rows.map((row) => {
-      return {
-        mbid: row.mbid,
-        name: row.name,
-        releaseCount: row.release_count,
-      };
+      return this.rowToLabel(row);
     });
 
     return labels;

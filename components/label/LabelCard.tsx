@@ -29,6 +29,7 @@ function scaledTextSize(text: string): string {
 }
 
 export default function LabelCard(props: LabelCardProps) {
+  console.log("namaemem: " + props.label.name);
   let textSizeBig = scaledTextSize(props.label.name);
   let maxNameLength = 40;
 
@@ -44,7 +45,7 @@ export default function LabelCard(props: LabelCardProps) {
         <LabelCardImage label={props.label}></LabelCardImage>
 
         <div
-          className={`${styles["main-text"]} h-full flex flex-col justify-start`}
+          className={`${styles["main-text"]} h-full flex flex-col justify-start items-center`}
         >
           <div className="h-16 px-6 flex flex-col justify-center overflow-hidden text-center">
             <p

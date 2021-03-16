@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocalStorage } from "./LocalStorageHook";
 
-//Abstraction over local storage that allows the use of arrays
+/**
+ * React hook for the labels that the user has selected. Will not sync across components.
+ * 
+ * Abstraction over local storage that allows the use of arrays for tracking selected labels.
+ **/
 export function useSelectedLabels() {
   const selectedLabelsKey = "selected-label-mbids";
   const [localStorage, setLocalStorage] = useLocalStorage(selectedLabelsKey, "");

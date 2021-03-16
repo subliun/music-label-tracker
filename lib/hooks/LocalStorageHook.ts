@@ -3,7 +3,9 @@ import { isLocalStorageAvailable } from "../util/LocalStorage";
 
 /**
  * A React hook for setting and getting local storage (see Storage API).
- *
+ * Does not synchronise between components. Each local storage key should have only 
+ * one usage of this hook within the application.
+ * 
  * The caller must check that local storage is available before using this hook,
  * or the state from the hook will silently not be persisted.
  *
