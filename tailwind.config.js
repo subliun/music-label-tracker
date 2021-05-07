@@ -8,6 +8,10 @@ module.exports = {
       colors: {
         gray: colors.trueGray,
         coolGray: colors.coolGray
+      },
+
+      screens: {
+        "hover-none": {"raw": "(hover: none)" }
       }
     },
   },
@@ -16,7 +20,9 @@ module.exports = {
       borderRadius: ["group-hover"],
       display: ["group-hover"],
       animation: ["hover"],
-      visibility: ["hover", "group-hover", "focus",]
+      visibility: ["hover", "group-hover", "focus"],
+      backgroundColor: ["group-focus"],
+      borderColor: ["group-focus"]
     },
   },
   plugins: [],

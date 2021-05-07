@@ -3,6 +3,7 @@ import { Label } from "../../lib/struct/Label";
 import { TextUtil } from "../../lib/util/TextUtil";
 import PlaceholderImage from "../search/PlaceholderImage";
 import LabelCardImage from "./LabelCardImage";
+import LabelReleaseCount from "./LabelReleaseCount";
 import styles from "./LabelStyles.module.css";
 
 interface LabelCardProps {
@@ -39,10 +40,10 @@ export default function LabelCard(props: LabelCardProps) {
         overflow-hidden 
         w-48 h-56 flex-none 
         flex flex-col items-center
-        bg-white shadow rounded-xl`}
+        bg-white group-focus:bg-gray-50 border-2 border-transparent group-focus:border-gray-200 shadow rounded-xl`}
       >
 
-        <LabelCardImage label={props.label}></LabelCardImage>
+        <LabelCardImage label={props.label} className="w-14 h-14 sm:w-28 sm:h-28 sm:mt-4"></LabelCardImage>
 
         <div
           className={`${styles["main-text"]} h-full flex flex-col justify-start items-center`}
@@ -54,9 +55,7 @@ export default function LabelCard(props: LabelCardProps) {
               {TextUtil.ellipsize(props.label.name, maxNameLength)}
             </p>
           </div>
-          <p className="font-light text-sm">
-              {props.label.releaseCount + " " + (props.label.releaseCount === 1 ? "release" : "releases")}
-            </p>
+          <LabelReleaseCount releaseCount={props.label.releaseCount}></LabelReleaseCount>
         </div>
       </div>
   );

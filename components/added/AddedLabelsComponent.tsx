@@ -1,75 +1,58 @@
 import React, { useEffect, useState } from "react";
-import { useSelectedLabels } from "../../lib/hooks/SelectedLabelsHook";
 import { Label } from "../../lib/struct/Label";
 import LabelCard from "../label/LabelCard";
+import LabelCardSmall from "../label/LabelCardSmall";
+import RemoveLabelCardOverlay from "../search/RemoveLabelCardOverlay";
+import AddAnotherLabelButton from "./AddAnotherLabelButton";
+import animStyles from "../Anim.module.css";
 
 interface AddedLabelsComponentProps {
-  selectedLabelMbids: string[];
+  selectedLabels: Label[];
   onLabelRemoved: (labelMbid: string) => void;
+  onAddAnotherLabelClick: () => void;
 }
 
-export default function AddedLabelsComponent(props: AddedLabelsComponentProps) {
-  const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
+const AddedLabelsComponent = React.forwardRef((props: AddedLabelsComponentProps, ref: any) => {
+  const [disappearing, setDisappearing] = useState<Label[]>([]);
 
-  console.log("add labels component sees selected labels: " + props.selectedLabelMbids);
+  function onRemoveLabelClick(e: React.MouseEvent, label: Label) {
+    let delay = 200;
 
-  useEffect(() => {
-    let oldMbidSet = new Set(selectedLabels.map((l) => l.mbid));
+    setDisappearing([...disappearing, label])
 
-    let unknownLabelMbids = props.selectedLabelMbids.filter((mbid) => !oldMbidSet.has(mbid));
-    if (unknownLabelMbids.length > 0) {
-      fetch("/api/info?mbids=" + unknownLabelMbids.join(","))
-        .then((res) => res.json())
-        .then((data) => {
-          console.log(data);
-          setSelectedLabels([...selectedLabels, ...data.labels]);
-        });
-    }
-  });
+    setTimeout(() => {
+      props.onLabelRemoved(label.mbid);
+      setDisappearing(disappearing.filter(d => d.mbid != label.mbid));
+    }, delay);
+  }
 
   return (
-    <div className="w-full p-4 max-w-md sm:max-w-3xl flex flex-col items-start bg-gray-100">
-      <h2 className="w-full text-xl ml-2 text-gray-900 rounded-md">Labels</h2>
-      <div className="flex flex-row flex-wrap">
-        {selectedLabels.map((label) => (
-          <div
-            className="ml-4 mt-4"
-            key={label.mbid}
-            onClick={() => props.onLabelRemoved(label.mbid)}
-          >
-            <LabelCard label={label}></LabelCard>
-          </div>
-        ))}
+    <div className="w-full p-4 max-w-md sm:max-w-4xl flex flex-col items-start bg-gray-50">
+      <h2 className="w-full text-xl ml-2 mb-4 text-gray-900 rounded-md">Labels</h2>
+      <div ref={ref} className="grid grid-cols-2 md:grid-cols-3 gap-x-6 sm:gap-x-8 gap-y-6">
+        {props.selectedLabels.map((label) => {
+          let animationClass = animStyles["fade-in"];
+          if (disappearing.map(l => l.mbid).includes(label.mbid)) {
+            animationClass = animStyles["shrink"];
+          }
 
-        <div
-          className={`
-          ml-4 mt-4
-        overflow-hidden 
-        w-40 h-40 flex-none 
-        flex flex-col items-center justify-center
-        bg-gray-200 shadow rounded-xl`}
-        >
-          <div className="w-32 -mt-2 bg-none bg-opacity-90 hover:bg-opacity-80 text-gray-400">
-            <svg
-              className="w-20 h-20 opacity-90"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          return (
+            <div
+              className={`${animationClass}`}
+              key={label.mbid}
+              div-mbid={label.mbid}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            <p className="text-gray-800 -mt-2 p-6 opacity-80 text-center tracking-wide font-light">
-              Add Another Label
-            </p>
-          </div>
-        </div>
+              <RemoveLabelCardOverlay onRemoveLabelClick={(e) => onRemoveLabelClick(e, label)}>
+                <LabelCardSmall label={label}></LabelCardSmall>
+              </RemoveLabelCardOverlay>
+            </div>
+          );
+        })}
+
+        <AddAnotherLabelButton onClick={props.onAddAnotherLabelClick}></AddAnotherLabelButton>
       </div>
     </div>
   );
-}
+});
+
+export default AddedLabelsComponent;

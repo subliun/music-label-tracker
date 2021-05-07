@@ -1,5 +1,4 @@
 import React, { FormEvent, useEffect, useRef, useState } from "react";
-import { useSelectedLabels } from "../../lib/hooks/SelectedLabelsHook";
 import { Label } from "../../lib/struct/Label";
 import { Release } from "../../lib/struct/Release";
 import ClearInputButton from "./ClearInputButton";
@@ -12,11 +11,11 @@ interface SearchComponentProps {
   onLabelAdded: (label: Label) => void;
 }
 
-export default function SearchComponent(props: SearchComponentProps) {
+const SearchComponent = React.forwardRef((props: SearchComponentProps, ref: any) => {
   const [searchText, setSearchText] = useState("");
   const [labels, setLabels] = useState<Label[]>([]);
   const [releases, setReleases] = useState<Release[]>([]);
-  
+
   const latestResultTimeRef = useRef<number>(0);
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +53,7 @@ export default function SearchComponent(props: SearchComponentProps) {
   //Search but only after some delay.
   function searchDelayed() {
     setLoading(true);
-    
+
     const delay = 200;
     let searchTimer = setTimeout(() => {
       search();
@@ -93,13 +92,16 @@ export default function SearchComponent(props: SearchComponentProps) {
     return results;
   }
 
+  let results = compileResults();
+
   return (
-    <div className="w-full px-6 max-w-md sm:max-w-3xl">
+    <div className="w-full max-w-md sm:max-w-3xl shadow-md bg-white border-t border-l border-r border-transparent focus-within:border-gray-200">
       <form method="GET" onSubmit={onSearchPressed}>
-        <div className="relative w-full h-12 z-10 flex justify-between bg-white shadow-md">
+        <div className={`relative w-full h-12 z-10 flex justify-between rounded-sm`}>
           <input
+            ref={ref}
             type="search"
-            className="w-full p-4 appearance-none text-lg"
+            className="w-full p-4 appearance-none text-lg "
             name="q"
             aria-label="Search"
             autoComplete={"off"}
@@ -109,11 +111,23 @@ export default function SearchComponent(props: SearchComponentProps) {
             }}
             placeholder="Enter a label (e.g. Sub Pop) or release (e.g. Titanic Rising)"
           ></input>
-          <ClearInputButton className="block sm:hidden w-8 h-8 mr-2 self-center" onClick={() => setSearchText("")}></ClearInputButton>
+          {searchText.length > 0 && <ClearInputButton
+            className="w-8 h-8 mr-2 self-center"
+            onClick={() => setSearchText("")}
+          ></ClearInputButton> }
         </div>
-      </form>
 
-      <SearchResultsSection results={compileResults()} loading={loading} onLabelAdded={onLabelAdded} searchText={searchText}></SearchResultsSection>
+        <hr></hr>
+      </form>
+      
+      <SearchResultsSection
+        results={results}
+        loading={loading}
+        onLabelAdded={onLabelAdded}
+        searchText={searchText}
+      ></SearchResultsSection>
     </div>
   );
-}
+});
+
+export default SearchComponent;

@@ -6,7 +6,7 @@ import { useLocalStorage } from "./LocalStorageHook";
  * 
  * Abstraction over local storage that allows the use of arrays for tracking selected labels.
  **/
-export function useSelectedLabels() {
+export function useStoredSelectedLabels() {
   const selectedLabelsKey = "selected-label-mbids";
   const [localStorage, setLocalStorage] = useLocalStorage(selectedLabelsKey, "");
 

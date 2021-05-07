@@ -3,6 +3,7 @@ import { Label } from "../../lib/struct/Label";
 import { Release } from "../../lib/struct/Release";
 import { TextUtil } from "../../lib/util/TextUtil";
 import LabelCardImage from "../label/LabelCardImage";
+import LabelReleaseCount from "../label/LabelReleaseCount";
 import styles from "./../label/LabelStyles.module.css";
 import PlaceholderImage from "./PlaceholderImage";
 
@@ -35,7 +36,7 @@ export default function ResultContentSmall(props: ResultContentSmallProps) {
 
     return (
       <span>
-        {props.label.releaseCount + " " + (props.label.releaseCount === 1 ? "release" : "releases")}
+        <LabelReleaseCount releaseCount={props.label.releaseCount}></LabelReleaseCount>
       </span>
     );
   }
@@ -48,7 +49,7 @@ export default function ResultContentSmall(props: ResultContentSmallProps) {
       relative h-22
         flex flex-row`}
     >
-      <LabelCardImage className="flex-none self-start" label={props.label}></LabelCardImage>
+      <LabelCardImage className="flex-none self-start w-14 h-14 sm:w-28 sm:h-28 sm:mt-4" label={props.label}></LabelCardImage>
 
       {props.release && <div className="absolute z-10 left-8 top-9">
         <PlaceholderImage

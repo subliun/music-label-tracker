@@ -14,3 +14,81 @@
     transform: rotate(360deg);
   }
 }
+
+.fade-in {
+  opacity: 0;
+  animation: fade-in 500ms ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-out {
+  opacity: 1;
+  animation: fade-out 500ms ease-in forwards;
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.shrink {
+  animation: shrink 200ms ease-in forwards;
+}
+
+@keyframes shrink {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.wiggle {
+  animation: wiggle 300ms linear;
+}
+
+@keyframes wiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  16% {
+    transform: rotate(4deg);
+  }
+
+  33% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(-4deg);
+  }
+
+  66% {
+    transform: rotate(0deg);
+  }
+
+  83% {
+    transform: rotate(4deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}

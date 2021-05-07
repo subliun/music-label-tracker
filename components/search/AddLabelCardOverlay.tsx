@@ -13,7 +13,8 @@ export default function AddLabelCardOverlay(props: { children: React.ReactNode }
           className={`
         p-1
         flex flex-row justify-center items-center 
-        text-white bg-blue-500 hover:bg-blue-600 border-gray-100 border-2 rounded-md`}
+        text-white bg-blue-500 hover:bg-blue-600 border-gray-100 border-2 rounded-md
+        transform hover:scale-125 transition-all`}
         >
           <svg
             className="w-16 h-16"
